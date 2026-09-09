@@ -1,0 +1,28 @@
+/*
+ * WKND brand tokens — migrated from https://wknd.site/us/en.html
+ * Heading: Asar (serif) · Body: Source Sans Pro (sans-serif)
+ * Accent: WKND yellow (#ffea00)
+ */
+
+:root {
+  /* colors */
+  --background-color: #fff;
+  --light-color: #f7f7f7;
+  --dark-color: #202020;
+  --text-color: #202020;
+  --text-color-inverse: #ebebeb;
+  --link-color: #202020;
+  --link-hover-color: #000;
+  --brand-primary: #ffea00;
+  --brand-third: #ebebeb;
+  --muted-color: #696969;
+
+  /* fonts */
+  --body-font-family: "Source Sans Pro", "Helvetica Neue", helvetica, arial, sans-serif;
+  --heading-font-family: asar, georgia, "Times New Roman", times, serif;
+
+  /* spacing */
+  --section-padding: 40px;
+  --content-max-width: 1024px;
+  --nav-height: 80px;
+}
