@@ -370,6 +370,16 @@ var CustomImportScript = (() => {
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);
       appended.forEach((el) => main.append(el));
+      main.querySelectorAll("a.cmp-button, .button > a[href], a.cmp-teaser__action-link").forEach((a) => {
+        if (a.closest("table")) return;
+        if (a.querySelector("img")) return;
+        if (a.closest("strong")) return;
+        const text = a.textContent.trim();
+        if (!text) return;
+        const strong = document.createElement("strong");
+        a.replaceWith(strong);
+        strong.append(a);
+      });
       return main;
     },
     generateDocumentPath: ({ url }) => {
