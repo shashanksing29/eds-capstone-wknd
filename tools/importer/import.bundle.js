@@ -149,12 +149,19 @@ var CustomImportScript = (() => {
     return WebImporter.DOMUtils ? rows : rows;
   }
   var import_default = {
-    transformDOM: ({ document, url, html, params }) => {
+    transformDOM: ({ document, url }) => {
       const main = pickMain(document);
       const path = new URL(url).pathname;
       stripChrome(main, WebImporter);
       absolutizeImages(main, url);
       fixLinks(main);
+      const h1 = main.querySelector("h1");
+      if (h1) {
+        const h1text = h1.textContent.trim().toLowerCase();
+        main.querySelectorAll("h2, h3").forEach((h) => {
+          if (h.textContent.trim().toLowerCase() === h1text) h.remove();
+        });
+      }
       const appended = [];
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
         const rows = buildAdventureCards(document, main, url);

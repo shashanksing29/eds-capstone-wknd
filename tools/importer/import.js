@@ -13,8 +13,6 @@
  * into the media_ hash store.
  */
 
-const ORIGIN = 'https://wknd.site';
-
 /**
  * Rewrite a source WKND path to a mainstream EDS path by dropping the
  * `/us/en` locale prefix and the `.html` extension. The home page
@@ -181,7 +179,7 @@ function buildAdventureCards(document, main, url) {
 }
 
 export default {
-  transformDOM: ({ document, url, html, params }) => {
+  transformDOM: ({ document, url }) => {
     /* global WebImporter */
     const main = pickMain(document);
     const path = new URL(url).pathname;
@@ -189,6 +187,16 @@ export default {
     stripChrome(main, WebImporter);
     absolutizeImages(main, url);
     fixLinks(main);
+
+    // Article pages repeat the title as a body heading right after the H1 —
+    // drop that duplicate so the article reads cleanly.
+    const h1 = main.querySelector('h1');
+    if (h1) {
+      const h1text = h1.textContent.trim().toLowerCase();
+      main.querySelectorAll('h2, h3').forEach((h) => {
+        if (h.textContent.trim().toLowerCase() === h1text) h.remove();
+      });
+    }
 
     // Build blocks appended at the end of main.
     const appended = [];
