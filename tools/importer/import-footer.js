@@ -17,7 +17,17 @@ export default {
   transformDOM: ({ document }) => {
     const container = document.createElement('div');
 
-    // Column 1: primary nav
+    // Column 1: WKND wordmark
+    const brand = document.createElement('p');
+    const brandLink = document.createElement('a');
+    brandLink.href = '/';
+    brandLink.textContent = 'WKND';
+    brand.append(brandLink);
+    container.append(brand);
+
+    container.append(document.createElement('hr'));
+
+    // Column 2: primary nav
     const navUl = document.createElement('ul');
     NAV_LINKS.forEach(([label, href]) => {
       const li = document.createElement('li');

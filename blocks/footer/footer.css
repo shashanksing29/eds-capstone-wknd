@@ -17,15 +17,30 @@ footer .footer > div {
 
 @media (width >= 900px) {
   footer .footer > div {
-    grid-template-columns: 2fr 1fr 3fr;
-    gap: 40px;
+    /* row 1: brand | nav | social ;  row 2: legal spans all */
+    grid-template-columns: auto 1fr auto;
+    gap: 32px 48px;
+    align-items: start;
     padding: 56px 32px 40px;
+  }
+
+  /* legal (4th child) spans the full width on its own row */
+  footer .footer > div > div:nth-child(4) {
+    grid-column: 1 / -1;
   }
 }
 
 footer .footer p {
   margin: 0;
   line-height: 1.6;
+}
+
+/* WKND wordmark */
+footer .footer > div > div:first-child p {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 /* links */

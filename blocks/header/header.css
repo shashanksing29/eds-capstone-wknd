@@ -37,10 +37,16 @@ header nav[aria-expanded='true'] {
 
   header nav {
     display: flex;
-    justify-content: space-between;
-    gap: 0 32px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0 24px;
     max-width: 1264px;
     padding: 0 32px;
+  }
+
+  /* push the nav links + search to the right, next to each other (WKND) */
+  header nav .nav-sections {
+    margin-left: auto;
   }
 
   header nav[aria-expanded='true'] {
