@@ -15,11 +15,13 @@ const DA_SOURCE = `https://admin.da.live/source/${ORG}/${REPO}`;
 const ADMIN = `https://admin.hlx.page`;
 const doPublish = process.argv.includes('--publish');
 
-// List tracked content files under content/.
+// List content files under content/, excluding the legacy /us/en subtree
+// (those are removed from DA separately by remove-old-da-paths.mjs).
 const files = execSync('find content -name "*.plain.html"', { encoding: 'utf-8' })
   .trim()
   .split('\n')
-  .filter(Boolean);
+  .filter(Boolean)
+  .filter((f) => !f.startsWith('content/us/'));
 
 /** Map a content/*.plain.html file to its DA path (no /content prefix). */
 function toDaPath(file) {

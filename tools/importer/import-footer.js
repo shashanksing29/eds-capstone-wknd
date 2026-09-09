@@ -4,11 +4,11 @@
  */
 
 const NAV_LINKS = [
-  ['Home', '/us/en/index'],
-  ['Magazine', '/us/en/magazine'],
-  ['Adventures', '/us/en/adventures'],
-  ['FAQs', '/us/en/faqs'],
-  ['About Us', '/us/en/about-us'],
+  ['Home', '/'],
+  ['Magazine', '/magazine'],
+  ['Adventures', '/adventures'],
+  ['FAQs', '/faqs'],
+  ['About Us', '/about-us'],
 ];
 
 const SOCIAL = [['Facebook', '#'], ['Twitter', '#'], ['Instagram', '#']];
