@@ -23,6 +23,13 @@ var CustomImportScript = (() => {
   __export(import_exports, {
     default: () => import_default
   });
+  function mainstreamPath(pathname) {
+    let p = pathname.replace(/\.html$/, "");
+    p = p.replace(/^\/us\/en(\/|$)/, "/");
+    p = p.replace(/\/{2,}/g, "/");
+    if (p !== "/" && p.endsWith("/")) p = p.slice(0, -1);
+    return p === "" ? "/" : p;
+  }
   function absolutizeImages(main, url) {
     const base = new URL(url);
     main.querySelectorAll("img").forEach((img) => {
@@ -38,12 +45,12 @@ var CustomImportScript = (() => {
       }
     });
   }
-  function fixLinks(main, url) {
-    const base = new URL(url);
+  function fixLinks(main) {
     main.querySelectorAll("a[href]").forEach((a) => {
       const href = a.getAttribute("href");
       if (href && href.startsWith("/")) {
-        a.setAttribute("href", href.replace(/\.html($|#|\?)/, "$1"));
+        const [path, tail = ""] = href.split(/(?=[#?])/);
+        a.setAttribute("href", mainstreamPath(path) + tail);
       }
     });
   }
@@ -113,7 +120,7 @@ var CustomImportScript = (() => {
       var _a, _b;
       const href = a.getAttribute("href") || "";
       if (!/\/adventures\/[a-z0-9-]+(\.html)?$/i.test(href)) return;
-      const key = href.replace(/\.html$/, "");
+      const key = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
       if (seen.has(key)) return;
       const scope = a.closest("li, article, .cmp-teaser, div") || a;
       const img = scope.querySelector("img");
@@ -142,14 +149,19 @@ var CustomImportScript = (() => {
     return WebImporter.DOMUtils ? rows : rows;
   }
   var import_default = {
-    transformDOM: ({ document, url, html, params }) => {
+    transformDOM: ({ document, url }) => {
       const main = pickMain(document);
       const path = new URL(url).pathname;
       stripChrome(main, WebImporter);
       absolutizeImages(main, url);
-      fixLinks(main, url);
-      main.querySelectorAll(".cmp-title__text").forEach((h) => {
-      });
+      fixLinks(main);
+      const h1 = main.querySelector("h1");
+      if (h1) {
+        const h1text = h1.textContent.trim().toLowerCase();
+        main.querySelectorAll("h2, h3").forEach((h) => {
+          if (h.textContent.trim().toLowerCase() === h1text) h.remove();
+        });
+      }
       const appended = [];
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
         const rows = buildAdventureCards(document, main, url);
@@ -179,11 +191,9 @@ var CustomImportScript = (() => {
       return main;
     },
     generateDocumentPath: ({ url }) => {
-      let p = new URL(url).pathname;
-      p = p.replace(/\.html$/, "");
-      p = p.replace(/\/$/, "");
-      if (p === "" || p === "/us/en") p = "/us/en/index";
-      return WebImporter.FileUtils.sanitizePath(p);
+      const p = mainstreamPath(new URL(url).pathname);
+      const target = p === "/" ? "/index" : p;
+      return WebImporter.FileUtils.sanitizePath(target);
     }
   };
   return __toCommonJS(import_exports);

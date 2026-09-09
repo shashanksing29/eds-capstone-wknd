@@ -13,7 +13,21 @@
  * into the media_ hash store.
  */
 
-const ORIGIN = 'https://wknd.site';
+/**
+ * Rewrite a source WKND path to a mainstream EDS path by dropping the
+ * `/us/en` locale prefix and the `.html` extension. The home page
+ * (`/us/en`) maps to `/`.
+ *   /us/en.html                       -> /
+ *   /us/en/magazine/arctic-surfing.html -> /magazine/arctic-surfing
+ *   /us/en/adventures.html            -> /adventures
+ */
+function mainstreamPath(pathname) {
+  let p = pathname.replace(/\.html$/, '');
+  p = p.replace(/^\/us\/en(\/|$)/, '/');
+  p = p.replace(/\/{2,}/g, '/');
+  if (p !== '/' && p.endsWith('/')) p = p.slice(0, -1);
+  return p === '' ? '/' : p;
+}
 
 /** Absolutize every in-scope image src against the source origin. */
 function absolutizeImages(main, url) {
@@ -34,14 +48,13 @@ function absolutizeImages(main, url) {
   });
 }
 
-/** Absolutize links so migrated pages keep working before redirects are set. */
-function fixLinks(main, url) {
-  const base = new URL(url);
+/** Rewrite internal links to the mainstream path scheme (drop /us/en, .html). */
+function fixLinks(main) {
   main.querySelectorAll('a[href]').forEach((a) => {
     const href = a.getAttribute('href');
     if (href && href.startsWith('/')) {
-      // keep internal WKND paths relative-to-root but strip .html for EDS
-      a.setAttribute('href', href.replace(/\.html($|#|\?)/, '$1'));
+      const [path, tail = ''] = href.split(/(?=[#?])/);
+      a.setAttribute('href', mainstreamPath(path) + tail);
     }
   });
 }
@@ -132,7 +145,7 @@ function buildAdventureCards(document, main, url) {
   main.querySelectorAll('a[href]').forEach((a) => {
     const href = a.getAttribute('href') || '';
     if (!/\/adventures\/[a-z0-9-]+(\.html)?$/i.test(href)) return;
-    const key = href.replace(/\.html$/, '');
+    const key = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
     if (seen.has(key)) return;
     // find an image + label for this card
     const scope = a.closest('li, article, .cmp-teaser, div') || a;
@@ -166,20 +179,24 @@ function buildAdventureCards(document, main, url) {
 }
 
 export default {
-  transformDOM: ({ document, url, html, params }) => {
+  transformDOM: ({ document, url }) => {
     /* global WebImporter */
     const main = pickMain(document);
     const path = new URL(url).pathname;
 
     stripChrome(main, WebImporter);
     absolutizeImages(main, url);
-    fixLinks(main, url);
+    fixLinks(main);
 
-    // Remove empty grid wrappers' noise: drop elements with no text/img
-    // (keeps structure lean for markdown conversion).
-    main.querySelectorAll('.cmp-title__text').forEach((h) => {
-      // unwrap the cmp-title span into a plain heading text (already a heading tag)
-    });
+    // Article pages repeat the title as a body heading right after the H1 —
+    // drop that duplicate so the article reads cleanly.
+    const h1 = main.querySelector('h1');
+    if (h1) {
+      const h1text = h1.textContent.trim().toLowerCase();
+      main.querySelectorAll('h2, h3').forEach((h) => {
+        if (h.textContent.trim().toLowerCase() === h1text) h.remove();
+      });
+    }
 
     // Build blocks appended at the end of main.
     const appended = [];
@@ -223,11 +240,10 @@ export default {
   },
 
   generateDocumentPath: ({ url }) => {
-    let p = new URL(url).pathname;
-    p = p.replace(/\.html$/, '');
-    p = p.replace(/\/$/, '');
-    if (p === '' || p === '/us/en') p = '/us/en/index';
+    const p = mainstreamPath(new URL(url).pathname);
+    // Home page maps to /index for the content store.
+    const target = p === '/' ? '/index' : p;
     // eslint-disable-next-line no-undef
-    return WebImporter.FileUtils.sanitizePath(p);
+    return WebImporter.FileUtils.sanitizePath(target);
   },
 };

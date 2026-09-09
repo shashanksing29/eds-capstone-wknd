@@ -24,17 +24,16 @@ var CustomImportScript = (() => {
     default: () => import_footer_default
   });
   var NAV_LINKS = [
-    ["Home", "/us/en/index"],
-    ["Magazine", "/us/en/magazine"],
-    ["Adventures", "/us/en/adventures"],
-    ["FAQs", "/us/en/faqs"],
-    ["About Us", "/us/en/about-us"]
+    ["Home", "/"],
+    ["Magazine", "/magazine"],
+    ["Adventures", "/adventures"],
+    ["FAQs", "/faqs"],
+    ["About Us", "/about-us"]
   ];
   var SOCIAL = [["Facebook", "#"], ["Twitter", "#"], ["Instagram", "#"]];
   var import_footer_default = {
     transformDOM: ({ document }) => {
       const container = document.createElement("div");
-      const nav = document.createElement("div");
       const navUl = document.createElement("ul");
       NAV_LINKS.forEach(([label, href]) => {
         const li = document.createElement("li");
@@ -44,12 +43,11 @@ var CustomImportScript = (() => {
         li.append(a);
         navUl.append(li);
       });
-      nav.append(navUl);
-      container.append(nav);
-      const follow = document.createElement("div");
+      container.append(navUl);
+      container.append(document.createElement("hr"));
       const h = document.createElement("h4");
       h.textContent = "Follow Us";
-      follow.append(h);
+      container.append(h);
       const socialUl = document.createElement("ul");
       SOCIAL.forEach(([label, href]) => {
         const li = document.createElement("li");
@@ -59,13 +57,11 @@ var CustomImportScript = (() => {
         li.append(a);
         socialUl.append(li);
       });
-      follow.append(socialUl);
-      container.append(follow);
-      const legal = document.createElement("div");
+      container.append(socialUl);
+      container.append(document.createElement("hr"));
       const p = document.createElement("p");
       p.textContent = "\u24B8 2024, WKND Site. WKND is a fictitious adventure and travel website created by Adobe to demonstrate how anyone can use Adobe Experience Manager to build a beautiful, feature-rich website.";
-      legal.append(p);
-      container.append(legal);
+      container.append(p);
       return container;
     },
     generateDocumentPath: () => "/footer"
