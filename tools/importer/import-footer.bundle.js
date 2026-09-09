@@ -34,6 +34,13 @@ var CustomImportScript = (() => {
   var import_footer_default = {
     transformDOM: ({ document }) => {
       const container = document.createElement("div");
+      const brand = document.createElement("p");
+      const brandLink = document.createElement("a");
+      brandLink.href = "/";
+      brandLink.textContent = "WKND";
+      brand.append(brandLink);
+      container.append(brand);
+      container.append(document.createElement("hr"));
       const navUl = document.createElement("ul");
       NAV_LINKS.forEach(([label, href]) => {
         const li = document.createElement("li");
