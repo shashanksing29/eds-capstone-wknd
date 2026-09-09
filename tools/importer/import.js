@@ -131,6 +131,8 @@ function buildMetadata(document, url, main, WebImporter) {
     meta.Template = 'adventure-listing';
   } else if (path.endsWith('/magazine') || path.endsWith('/magazine.html')) {
     meta.Template = 'magazine';
+  } else if (path === '/us/en' || path === '/us/en.html' || path === '/us/en/' || mainstreamPath(path) === '/') {
+    meta.Template = 'home';
   }
 
   const block = WebImporter.Blocks.getMetadataBlock(document, meta);
