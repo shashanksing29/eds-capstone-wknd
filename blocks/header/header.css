@@ -149,9 +149,9 @@ header nav[aria-expanded='true'] .nav-hamburger-icon::after {
 header .nav-brand {
   grid-area: brand;
   font-family: var(--body-font-family);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   line-height: 1;
 }
 
@@ -296,11 +296,12 @@ header nav .nav-tools {
 
 header nav .nav-tools p {
   margin: 0;
-  padding: 8px 14px 8px 32px;
-  border: 1px solid #d0d0d0;
+  width: 166px;
+  padding: 11px 14px 11px 36px;
+  border: 0;
   color: var(--muted-color);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23696969" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 10px center;
+  background: rgb(235 235 235 / 54%) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23202020" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 12px center;
 }

@@ -469,6 +469,21 @@ export default {
 
     appended.forEach((el) => main.append(el));
 
+    // Buttonize the remaining WKND CTA buttons (e.g. "All Articles",
+    // "All Trips") left in default content — EDS only styles a link as a button
+    // when it's wrapped in <strong>. Skip links inside the generated block
+    // tables (carousel/columns/hero/cards style their own CTAs).
+    main.querySelectorAll('a.cmp-button, .button > a[href], a.cmp-teaser__action-link').forEach((a) => {
+      if (a.closest('table')) return;
+      if (a.querySelector('img')) return;
+      if (a.closest('strong')) return;
+      const text = a.textContent.trim();
+      if (!text) return;
+      const strong = document.createElement('strong');
+      a.replaceWith(strong);
+      strong.append(a);
+    });
+
     return main;
   },
 
