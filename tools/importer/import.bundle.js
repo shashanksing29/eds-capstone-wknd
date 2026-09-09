@@ -146,7 +146,45 @@ var CustomImportScript = (() => {
       cell.append(p);
       rows.push([cell]);
     });
-    return WebImporter.DOMUtils ? rows : rows;
+    return rows;
+  }
+  function buildHomeHero(document, url) {
+    var _a, _b, _c, _d;
+    const base = new URL(url);
+    const teaser = document.querySelector(".cmp-carousel .cmp-teaser, .carousel .cmp-teaser, .cmp-teaser");
+    if (!teaser) return null;
+    const title = (_b = (_a = teaser.querySelector(".cmp-teaser__title")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+    const desc = (_d = (_c = teaser.querySelector(".cmp-teaser__description")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
+    const ctaEl = teaser.querySelector(".cmp-teaser__action-link, a");
+    const imgEl = teaser.querySelector("img");
+    if (!title || !imgEl) return null;
+    const content = document.createElement("div");
+    const h1 = document.createElement("h1");
+    h1.textContent = title;
+    content.append(h1);
+    if (desc) {
+      const p = document.createElement("p");
+      p.textContent = desc;
+      content.append(p);
+    }
+    if (ctaEl) {
+      const p = document.createElement("p");
+      const a = document.createElement("a");
+      const href = ctaEl.getAttribute("href") || "/adventures";
+      a.href = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
+      a.textContent = ctaEl.textContent.trim() || "View Trips";
+      const strong = document.createElement("strong");
+      strong.append(a);
+      p.append(strong);
+      content.append(p);
+    }
+    const imgCell = document.createElement("div");
+    const im = document.createElement("img");
+    const src = imgEl.getAttribute("src") || "";
+    im.src = /^https?:/.test(src) ? src : new URL(src, base).href;
+    im.alt = imgEl.getAttribute("alt") || title;
+    imgCell.append(im);
+    return [["Hero"], [imgCell], [content]];
   }
   var import_default = {
     transformDOM: ({ document, url }) => {
@@ -163,6 +201,14 @@ var CustomImportScript = (() => {
         });
       }
       const appended = [];
+      const isHome = path === "/us/en" || path === "/us/en.html" || path === "/us/en/" || mainstreamPath(path) === "/";
+      if (isHome) {
+        const heroRows = buildHomeHero(document, url);
+        if (heroRows) {
+          const heroTable = WebImporter.DOMUtils.createTable(heroRows, document);
+          main.prepend(heroTable);
+        }
+      }
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
         const rows = buildAdventureCards(document, main, url);
         if (rows) {

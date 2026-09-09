@@ -1,37 +1,90 @@
+/* WKND hero — full-bleed image with an overlaid content panel + yellow CTA */
 .hero-container .hero-wrapper {
   max-width: unset;
   padding: 0;
 }
 
-.hero {
+.hero.block {
   position: relative;
-  padding: 40px 24px;
-  min-height: 300px;
+  display: grid;
+  min-height: 78vh;
+  max-height: 820px;
 }
 
-.hero h1 {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  color: var(--background-color);
+/* background image fills the block */
+.hero.block .hero-image {
+  grid-area: 1 / 1;
+  line-height: 0;
 }
 
-.hero picture {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  object-fit: cover;
-  box-sizing: border-box;
-}
-
-.hero img {
-  object-fit: cover;
+.hero.block .hero-image picture,
+.hero.block .hero-image img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+}
+
+/* overlaid content panel, bottom-left like WKND */
+.hero.block .hero-content {
+  grid-area: 1 / 1;
+  z-index: 1;
+  align-self: end;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+.hero.block .hero-content > * {
+  max-width: 620px;
+}
+
+.hero.block .hero-content h1 {
+  margin: 0 0 12px;
+  color: var(--background-color);
+  font-family: var(--heading-font-family);
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.1;
+  text-shadow: 0 2px 16px rgb(0 0 0 / 45%);
+}
+
+.hero.block .hero-content p {
+  margin: 0 0 24px;
+  color: var(--background-color);
+  font-size: var(--body-font-size-m);
+  line-height: 1.5;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 50%);
+}
+
+.hero.block .hero-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* yellow CTA button */
+.hero.block .hero-content a.button:any-link {
+  display: inline-block;
+  min-width: 180px;
+  padding: 0.9rem 2rem;
+  border: 2px solid var(--brand-primary);
+  border-radius: 0;
+  background-color: var(--brand-primary);
+  color: var(--text-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-shadow: none;
+}
+
+.hero.block .hero-content a.button:hover {
+  border-color: var(--text-color);
+  background-color: var(--text-color);
+  color: var(--brand-primary);
 }
 
 @media (width >= 900px) {
-  .hero {
-    padding: 40px 32px;
+  .hero.block .hero-content {
+    padding: 0 32px 72px;
   }
 }
