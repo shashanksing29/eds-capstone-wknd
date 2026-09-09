@@ -83,6 +83,24 @@ export default function decorate(block) {
 
     prev.addEventListener('click', () => showSlide(block, Number(block.dataset.active || 0) - 1));
     next.addEventListener('click', () => showSlide(block, Number(block.dataset.active || 0) + 1));
+
+    // auto-advance every 6s, pause on hover/focus
+    const AUTO_MS = 6000;
+    let timer = null;
+    const stop = () => {
+      if (timer) { window.clearInterval(timer); timer = null; }
+    };
+    const start = () => {
+      stop();
+      timer = window.setInterval(() => {
+        showSlide(block, Number(block.dataset.active || 0) + 1);
+      }, AUTO_MS);
+    };
+    block.addEventListener('mouseenter', stop);
+    block.addEventListener('mouseleave', start);
+    block.addEventListener('focusin', stop);
+    block.addEventListener('focusout', start);
+    start();
   }
 
   showSlide(block, 0);

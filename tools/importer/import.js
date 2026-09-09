@@ -278,6 +278,56 @@ function buildCardsFromArticles(document, listEl, base) {
   return rows.length > 1 ? rows : null;
 }
 
+/**
+ * Convert a WKND teaser (Featured Article / Climbing New Zealand) into a
+ * Columns block: text column (eyebrow + title + description + CTA) and image
+ * column, side by side. Returns a table element or null.
+ */
+function buildFeaturedColumns(document, teaser, base, WebImporter) {
+  const img = teaser.querySelector('img');
+  const title = teaser.querySelector('.cmp-teaser__title')?.textContent?.trim();
+  if (!img || !title) return null;
+
+  const pre = teaser.querySelector('.cmp-teaser__pretitle')?.textContent?.trim();
+  const desc = teaser.querySelector('.cmp-teaser__description')?.textContent?.trim();
+  const ctaEl = teaser.querySelector('.cmp-teaser__action-link, a');
+
+  const text = document.createElement('div');
+  if (pre) {
+    const p = document.createElement('p');
+    const em = document.createElement('em');
+    em.textContent = pre;
+    p.append(em);
+    text.append(p);
+  }
+  const h = document.createElement('h2');
+  h.textContent = title;
+  text.append(h);
+  if (desc) {
+    const p = document.createElement('p');
+    p.textContent = desc;
+    text.append(p);
+  }
+  if (ctaEl) {
+    const p = document.createElement('p');
+    const a = document.createElement('a');
+    const href = ctaEl.getAttribute('href') || '/';
+    a.href = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
+    a.textContent = ctaEl.textContent.trim();
+    p.append(a);
+    text.append(p);
+  }
+
+  const imgCell = document.createElement('div');
+  const im = document.createElement('img');
+  im.src = absSrc(img, base);
+  im.alt = img.getAttribute('alt') || title;
+  imgCell.append(im);
+
+  // image left, text right (WKND uses row-reverse → image first visually)
+  return WebImporter.DOMUtils.createTable([['Columns (featured)'], [imgCell, text]], document);
+}
+
 export default {
   transformDOM: ({ document, url }) => {
     /* global WebImporter */
@@ -308,6 +358,15 @@ export default {
     if (isHome) {
       const base = new URL(url);
       const carouselRows = buildHomeCarousel(document, url);
+
+      // Convert the non-carousel teasers (Featured Article, Climbing NZ) into
+      // 2-column Columns blocks, in place.
+      const featuredTeasers = [...main.querySelectorAll('.cmp-teaser')]
+        .filter((t) => !t.closest('.cmp-carousel') && t.querySelector('img'));
+      featuredTeasers.forEach((teaser) => {
+        const table = buildFeaturedColumns(document, teaser, base, WebImporter);
+        if (table) teaser.replaceWith(table);
+      });
 
       // Convert each source article list into a Cards table, in place.
       const articleLists = [...main.querySelectorAll('ul')].filter((ul) => ul.querySelector('article'));

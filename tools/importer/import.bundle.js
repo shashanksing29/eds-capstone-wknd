@@ -231,6 +231,46 @@ var CustomImportScript = (() => {
     });
     return rows.length > 1 ? rows : null;
   }
+  function buildFeaturedColumns(document, teaser, base, WebImporter2) {
+    var _a, _b, _c, _d, _e, _f;
+    const img = teaser.querySelector("img");
+    const title = (_b = (_a = teaser.querySelector(".cmp-teaser__title")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+    if (!img || !title) return null;
+    const pre = (_d = (_c = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
+    const desc = (_f = (_e = teaser.querySelector(".cmp-teaser__description")) == null ? void 0 : _e.textContent) == null ? void 0 : _f.trim();
+    const ctaEl = teaser.querySelector(".cmp-teaser__action-link, a");
+    const text = document.createElement("div");
+    if (pre) {
+      const p = document.createElement("p");
+      const em = document.createElement("em");
+      em.textContent = pre;
+      p.append(em);
+      text.append(p);
+    }
+    const h = document.createElement("h2");
+    h.textContent = title;
+    text.append(h);
+    if (desc) {
+      const p = document.createElement("p");
+      p.textContent = desc;
+      text.append(p);
+    }
+    if (ctaEl) {
+      const p = document.createElement("p");
+      const a = document.createElement("a");
+      const href = ctaEl.getAttribute("href") || "/";
+      a.href = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
+      a.textContent = ctaEl.textContent.trim();
+      p.append(a);
+      text.append(p);
+    }
+    const imgCell = document.createElement("div");
+    const im = document.createElement("img");
+    im.src = absSrc(img, base);
+    im.alt = img.getAttribute("alt") || title;
+    imgCell.append(im);
+    return WebImporter2.DOMUtils.createTable([["Columns (featured)"], [imgCell, text]], document);
+  }
   var import_default = {
     transformDOM: ({ document, url }) => {
       const main = pickMain(document);
@@ -250,6 +290,11 @@ var CustomImportScript = (() => {
       if (isHome) {
         const base = new URL(url);
         const carouselRows = buildHomeCarousel(document, url);
+        const featuredTeasers = [...main.querySelectorAll(".cmp-teaser")].filter((t) => !t.closest(".cmp-carousel") && t.querySelector("img"));
+        featuredTeasers.forEach((teaser) => {
+          const table = buildFeaturedColumns(document, teaser, base, WebImporter);
+          if (table) teaser.replaceWith(table);
+        });
         const articleLists = [...main.querySelectorAll("ul")].filter((ul) => ul.querySelector("article"));
         articleLists.forEach((ul) => {
           const cardRows = buildCardsFromArticles(document, ul, base);

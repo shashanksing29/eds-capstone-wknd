@@ -1,4 +1,8 @@
-/* WKND hero carousel — full-bleed slides with overlaid content, arrows + dots */
+/*
+ * WKND hero carousel — full-width image on top, a white caption card below it
+ * (dark title, description, yellow CTA). Slide dots are centered under the
+ * caption; prev/next arrows sit at the bottom-right. Not an overlay.
+ */
 .carousel-container .carousel-wrapper {
   max-width: unset;
   padding: 0;
@@ -6,6 +10,7 @@
 
 .carousel.block {
   position: relative;
+  padding-bottom: 44px; /* room for dots row */
 }
 
 .carousel.block .carousel-track {
@@ -14,61 +19,54 @@
 
 .carousel.block .carousel-slide {
   display: none;
-  position: relative;
 }
 
 .carousel.block .carousel-slide.active {
-  display: grid;
+  display: block;
 }
 
+/* full-width image */
 .carousel.block .carousel-slide-image {
-  grid-area: 1 / 1;
   line-height: 0;
-  min-height: 420px;
-  max-height: 640px;
-  height: 56vh;
 }
 
 .carousel.block .carousel-slide-image picture,
 .carousel.block .carousel-slide-image img {
   width: 100%;
-  height: 100%;
+  height: 56vh;
+  min-height: 340px;
+  max-height: 640px;
   object-fit: cover;
 }
 
-/* content panel — bottom-left, white text over the image */
+/* white caption card, overlapping the image bottom, left-aligned */
 .carousel.block .carousel-slide-content {
-  grid-area: 1 / 1;
-  z-index: 1;
-  align-self: end;
   box-sizing: border-box;
-  width: 100%;
   max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: 0 24px 40px;
-}
-
-.carousel.block .carousel-slide-content > * {
-  max-width: 600px;
+  margin: -110px auto 0;
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 48px);
+  background: var(--background-color);
+  padding: 40px 44px 36px;
 }
 
 .carousel.block .carousel-slide-content h1,
 .carousel.block .carousel-slide-content h2 {
-  margin: 0 0 8px;
-  color: #fff;
+  margin: 0 0 12px;
+  color: var(--text-color);
   font-family: var(--heading-font-family);
-  font-size: clamp(28px, 4vw, 40px);
+  font-size: 36px;
   font-weight: 400;
   line-height: 1.2;
-  text-shadow: 0 2px 14px rgb(0 0 0 / 45%);
 }
 
 .carousel.block .carousel-slide-content p {
   margin: 0 0 20px;
-  color: #fff;
+  color: var(--text-color);
   font-size: var(--body-font-size-m);
   line-height: 1.5;
-  text-shadow: 0 1px 10px rgb(0 0 0 / 55%);
+  max-width: 720px;
 }
 
 .carousel.block .carousel-slide-content p:last-child {
@@ -85,7 +83,6 @@
   font-weight: 600;
   text-transform: uppercase;
   text-decoration: none;
-  text-shadow: none;
 }
 
 .carousel.block .carousel-slide-content a:any-link:hover {
@@ -93,31 +90,30 @@
   color: var(--brand-primary);
 }
 
-/* arrows */
+/* prev/next arrows — bottom-right, dark chevrons */
 .carousel.block .carousel-nav {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  right: 24px;
+  bottom: 0;
   display: flex;
-  gap: 8px;
+  gap: 20px;
   z-index: 2;
 }
 
 .carousel.block .carousel-arrow {
-  width: 44px;
-  height: 44px;
+  width: 24px;
+  height: 24px;
   border: 0;
-  border-radius: 0;
-  background: rgb(255 255 255 / 85%);
+  background: transparent;
   color: var(--text-color);
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1;
   cursor: pointer;
   padding: 0;
 }
 
 .carousel.block .carousel-arrow:hover {
-  background: var(--brand-primary);
+  color: var(--brand-primary);
 }
 
 .carousel.block .carousel-prev::before {
@@ -128,15 +124,15 @@
   content: "\2192";
 }
 
-/* dots */
+/* dots — centered along the bottom */
 .carousel.block .carousel-dots {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 16px;
+  bottom: 8px;
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   z-index: 2;
 }
 
@@ -144,18 +140,19 @@
   width: 10px;
   height: 10px;
   padding: 0;
-  border: 1px solid #fff;
+  border: 1px solid var(--text-color);
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
 }
 
 .carousel.block .carousel-dot[aria-selected="true"] {
-  background: #fff;
+  background: var(--text-color);
 }
 
 @media (width >= 900px) {
   .carousel.block .carousel-slide-content {
-    padding: 0 32px 56px;
+    width: 100%;
+    padding: 48px 56px 40px;
   }
 }
