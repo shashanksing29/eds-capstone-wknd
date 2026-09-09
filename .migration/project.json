@@ -1,0 +1,12 @@
+{
+  "sites": {
+    "eds-capstone-wknd": {
+      "previewOrg": "shashanksing29",
+      "previewSite": "eds-capstone-wknd",
+      "contentHostUrl": "https://content.da.live/shashanksing29/eds-capstone-wknd/"
+    }
+  },
+  "features": [
+    "site-planning"
+  ]
+}

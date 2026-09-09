@@ -1,0 +1,78 @@
+{
+  "templates": [
+    {
+      "name": "content-landing",
+      "urls": [
+        "https://wknd.site/us/en/about-us.html",
+        "https://wknd.site/us/en/magazine.html"
+      ],
+      "coverageGaps": [],
+      "description": "Content landing page with heading, rich text, and image sections",
+      "blocks": []
+    },
+    {
+      "name": "adventure-detail",
+      "urls": [
+        "https://wknd.site/us/en/adventures/bali-surf-camp.html",
+        "https://wknd.site/us/en/adventures/beervana-portland.html",
+        "https://wknd.site/us/en/adventures/climbing-new-zealand.html",
+        "https://wknd.site/us/en/adventures/colorado-rock-climbing.html",
+        "https://wknd.site/us/en/adventures/cycling-southern-utah.html",
+        "https://wknd.site/us/en/adventures/cycling-tuscany.html",
+        "https://wknd.site/us/en/adventures/downhill-skiing-wyoming.html",
+        "https://wknd.site/us/en/adventures/gastronomic-marais-tour.html",
+        "https://wknd.site/us/en/adventures/napa-wine-tasting.html",
+        "https://wknd.site/us/en/adventures/riverside-camping-australia.html",
+        "https://wknd.site/us/en/adventures/ski-touring-mont-blanc.html",
+        "https://wknd.site/us/en/adventures/surf-camp-costa-rica.html",
+        "https://wknd.site/us/en/adventures/tahoe-skiing.html",
+        "https://wknd.site/us/en/adventures/west-coast-cycling.html",
+        "https://wknd.site/us/en/adventures/whistler-mountain-biking.html",
+        "https://wknd.site/us/en/adventures/yosemite-backpacking.html"
+      ],
+      "coverageGaps": [],
+      "description": "Detail page with hero image, title/meta header, and long-form body content",
+      "blocks": []
+    },
+    {
+      "name": "adventure-listing",
+      "urls": [
+        "https://wknd.site/us/en/adventures.html"
+      ],
+      "coverageGaps": [],
+      "description": "Listing page with intro heading and a grid of teaser cards linking to detail pages",
+      "blocks": []
+    },
+    {
+      "name": "faq-page",
+      "urls": [
+        "https://wknd.site/us/en/faqs.html"
+      ],
+      "coverageGaps": [],
+      "description": "Question-and-answer page with a stacked list of headings and text",
+      "blocks": []
+    },
+    {
+      "name": "homepage",
+      "urls": [
+        "https://wknd.site/us/en.html"
+      ],
+      "coverageGaps": [],
+      "description": "Home landing page with full-bleed hero banner and stacked content sections",
+      "blocks": []
+    },
+    {
+      "name": "article-detail",
+      "urls": [
+        "https://wknd.site/us/en/magazine/arctic-surfing.html",
+        "https://wknd.site/us/en/magazine/guide-la-skateparks.html",
+        "https://wknd.site/us/en/magazine/san-diego-surf.html",
+        "https://wknd.site/us/en/magazine/ski-touring.html",
+        "https://wknd.site/us/en/magazine/western-australia.html"
+      ],
+      "coverageGaps": [],
+      "description": "Magazine article page with hero image, title, and article body content",
+      "blocks": []
+    }
+  ]
+}
