@@ -102,6 +102,14 @@ h4 { font-size: var(--heading-font-size-m); }
 h5 { font-size: var(--heading-font-size-s); }
 h6 { font-size: var(--heading-font-size-xs); }
 
+/* Home section headings get a short yellow underline accent (WKND) */
+body.home main > .section > div > h2,
+body.home main > .section > div > h3 {
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--brand-primary);
+  display: table;
+}
+
 p,
 dl,
 ol,

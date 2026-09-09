@@ -51,6 +51,12 @@
   object-fit: cover;
 }
 
+/* gray panel behind the text column (WKND #ebebeb) */
+.columns.featured > div > div:not(.columns-img-col) {
+  background-color: var(--brand-third);
+  padding: 36px 28px;
+}
+
 .columns.featured p em {
   display: inline-block;
   margin-bottom: 4px;
@@ -93,6 +99,6 @@
 
   .columns.featured > div > div:not(.columns-img-col) {
     flex: 0 0 40%;
-    padding: 24px 0 24px 48px;
+    padding: 63px 36px 36px;
   }
 }

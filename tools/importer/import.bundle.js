@@ -108,6 +108,8 @@ var CustomImportScript = (() => {
       meta.Template = "adventure-listing";
     } else if (path.endsWith("/magazine") || path.endsWith("/magazine.html")) {
       meta.Template = "magazine";
+    } else if (path === "/us/en" || path === "/us/en.html" || path === "/us/en/" || mainstreamPath(path) === "/") {
+      meta.Template = "home";
     }
     const block = WebImporter2.Blocks.getMetadataBlock(document, meta);
     return block;
