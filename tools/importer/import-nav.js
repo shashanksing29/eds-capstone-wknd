@@ -1,7 +1,8 @@
 /*
  * Import for the WKND nav content fragment (/nav).
  * The header block loads this via loadFragment() and expects 3 top-level
- * sections: brand, sections (primary nav), tools.
+ * sections: brand, sections (primary nav), tools. Sections are separated by
+ * <hr> so they survive markdown conversion as distinct top-level divs.
  */
 
 const NAV_LINKS = [
@@ -17,17 +18,16 @@ export default {
     const container = document.createElement('div');
 
     // Section 1: brand
-    const brand = document.createElement('div');
     const brandP = document.createElement('p');
     const brandLink = document.createElement('a');
     brandLink.href = '/';
     brandLink.textContent = 'WKND';
     brandP.append(brandLink);
-    brand.append(brandP);
-    container.append(brand);
+    container.append(brandP);
+
+    container.append(document.createElement('hr'));
 
     // Section 2: primary nav
-    const sections = document.createElement('div');
     const ul = document.createElement('ul');
     NAV_LINKS.forEach(([label, href]) => {
       const li = document.createElement('li');
@@ -37,15 +37,14 @@ export default {
       li.append(a);
       ul.append(li);
     });
-    sections.append(ul);
-    container.append(sections);
+    container.append(ul);
+
+    container.append(document.createElement('hr'));
 
     // Section 3: tools
-    const tools = document.createElement('div');
     const toolsP = document.createElement('p');
     toolsP.textContent = 'Search';
-    tools.append(toolsP);
-    container.append(tools);
+    container.append(toolsP);
 
     return container;
   },

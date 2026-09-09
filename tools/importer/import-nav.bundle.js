@@ -33,15 +33,13 @@ var CustomImportScript = (() => {
   var import_nav_default = {
     transformDOM: ({ document }) => {
       const container = document.createElement("div");
-      const brand = document.createElement("div");
       const brandP = document.createElement("p");
       const brandLink = document.createElement("a");
       brandLink.href = "/";
       brandLink.textContent = "WKND";
       brandP.append(brandLink);
-      brand.append(brandP);
-      container.append(brand);
-      const sections = document.createElement("div");
+      container.append(brandP);
+      container.append(document.createElement("hr"));
       const ul = document.createElement("ul");
       NAV_LINKS.forEach(([label, href]) => {
         const li = document.createElement("li");
@@ -51,13 +49,11 @@ var CustomImportScript = (() => {
         li.append(a);
         ul.append(li);
       });
-      sections.append(ul);
-      container.append(sections);
-      const tools = document.createElement("div");
+      container.append(ul);
+      container.append(document.createElement("hr"));
       const toolsP = document.createElement("p");
       toolsP.textContent = "Search";
-      tools.append(toolsP);
-      container.append(tools);
+      container.append(toolsP);
       return container;
     },
     generateDocumentPath: () => "/nav"
