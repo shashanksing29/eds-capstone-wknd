@@ -178,54 +178,104 @@ function buildAdventureCards(document, main, url) {
   return rows;
 }
 
-/**
- * Build a Hero block from the first carousel slide of the WKND home page:
- * background image + title + description + a yellow CTA button. Returns the
- * table rows for WebImporter.DOMUtils.createTable, or null if not found.
- */
-function buildHomeHero(document, url) {
-  const base = new URL(url);
-  const teaser = document.querySelector('.cmp-carousel .cmp-teaser, .carousel .cmp-teaser, .cmp-teaser');
-  if (!teaser) return null;
-
-  const title = teaser.querySelector('.cmp-teaser__title')?.textContent?.trim();
-  const desc = teaser.querySelector('.cmp-teaser__description')?.textContent?.trim();
-  const ctaEl = teaser.querySelector('.cmp-teaser__action-link, a');
-  const imgEl = teaser.querySelector('img');
-  if (!title || !imgEl) return null;
-
-  // content cell
-  const content = document.createElement('div');
-  const h1 = document.createElement('h1');
-  h1.textContent = title;
-  content.append(h1);
-  if (desc) {
-    const p = document.createElement('p');
-    p.textContent = desc;
-    content.append(p);
-  }
-  if (ctaEl) {
-    const p = document.createElement('p');
-    const a = document.createElement('a');
-    const href = ctaEl.getAttribute('href') || '/adventures';
-    a.href = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
-    a.textContent = ctaEl.textContent.trim() || 'View Trips';
-    // EDS decorateButtons turns a bold/linked single-child paragraph into a button
-    const strong = document.createElement('strong');
-    strong.append(a);
-    p.append(strong);
-    content.append(p);
-  }
-
-  // image cell
-  const imgCell = document.createElement('div');
-  const im = document.createElement('img');
+/** Absolutize a possibly-relative image src against the source origin. */
+function absSrc(imgEl, base) {
   const src = imgEl.getAttribute('src') || '';
-  im.src = /^https?:/.test(src) ? src : new URL(src, base).href;
-  im.alt = imgEl.getAttribute('alt') || title;
-  imgCell.append(im);
+  return /^https?:/.test(src) ? src : new URL(src, base).href;
+}
 
-  return [['Hero'], [imgCell], [content]];
+/**
+ * Build a Carousel block from every slide of the WKND home hero carousel.
+ * Each slide contributes two cells: [image] and [title + description + CTA].
+ * Returns table rows for WebImporter.DOMUtils.createTable, or null.
+ */
+function buildHomeCarousel(document, url) {
+  const base = new URL(url);
+  const slides = [...document.querySelectorAll('.cmp-carousel__item')];
+  if (slides.length === 0) return null;
+
+  const rows = [['Carousel']];
+  slides.forEach((slide) => {
+    const title = slide.querySelector('.cmp-teaser__title')?.textContent?.trim();
+    const desc = slide.querySelector('.cmp-teaser__description')?.textContent?.trim();
+    const ctaEl = slide.querySelector('.cmp-teaser__action-link, a');
+    const imgEl = slide.querySelector('img');
+    if (!title || !imgEl) return;
+
+    const imgCell = document.createElement('div');
+    const im = document.createElement('img');
+    im.src = absSrc(imgEl, base);
+    im.alt = imgEl.getAttribute('alt') || title;
+    imgCell.append(im);
+
+    const content = document.createElement('div');
+    const h = document.createElement('h2');
+    h.textContent = title;
+    content.append(h);
+    if (desc) {
+      const p = document.createElement('p');
+      p.textContent = desc;
+      content.append(p);
+    }
+    if (ctaEl) {
+      const p = document.createElement('p');
+      const a = document.createElement('a');
+      const href = ctaEl.getAttribute('href') || '/adventures';
+      a.href = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
+      a.textContent = ctaEl.textContent.trim() || 'View Trips';
+      p.append(a);
+      content.append(p);
+    }
+    rows.push([imgCell, content]);
+  });
+  return rows.length > 1 ? rows : null;
+}
+
+/**
+ * Convert an article/teaser list (Recent Articles, "Where do you want to go?")
+ * into Cards block rows: each card is [image + title link + description].
+ */
+function buildCardsFromArticles(document, listEl, base) {
+  const items = [...listEl.querySelectorAll('article, li')].filter((el, i, arr) => (
+    // keep leaf items: articles, or li that has a link+image
+    el.tagName === 'ARTICLE' || (!arr.some((o) => o !== el && o.contains(el) && o.tagName === 'ARTICLE'))
+  ));
+  const seen = new Set();
+  const rows = [['Cards']];
+  (listEl.querySelectorAll('article').length ? listEl.querySelectorAll('article') : items).forEach((art) => {
+    const link = art.querySelector('a[href]');
+    const img = art.querySelector('img');
+    if (!link || !img) return;
+    const href = mainstreamPath(link.getAttribute('href') || '');
+    if (seen.has(href)) return;
+    seen.add(href);
+    const title = [...art.querySelectorAll('a')].map((a) => a.textContent.trim()).find(Boolean) || '';
+    // description = text nodes not inside a link
+    let desc = '';
+    art.querySelectorAll('p, div, span').forEach((n) => {
+      const t = n.textContent.trim();
+      if (t && !n.querySelector('a, img') && t !== title && t.length > desc.length) desc = t;
+    });
+
+    const cell = document.createElement('div');
+    const im = document.createElement('img');
+    im.src = absSrc(img, base);
+    im.alt = title;
+    cell.append(im);
+    const tp = document.createElement('p');
+    const ta = document.createElement('a');
+    ta.href = href;
+    ta.textContent = title;
+    tp.append(ta);
+    cell.append(tp);
+    if (desc) {
+      const dp = document.createElement('p');
+      dp.textContent = desc;
+      cell.append(dp);
+    }
+    rows.push([cell]);
+  });
+  return rows.length > 1 ? rows : null;
 }
 
 export default {
@@ -251,15 +301,29 @@ export default {
     // Build blocks appended at the end of main.
     const appended = [];
 
-    // Home page → prepend a Hero block built from the first carousel slide,
-    // then drop the source carousel so its slides don't duplicate the hero.
+    // Home page → build a Carousel from the hero slides, convert the article
+    // teaser lists (Recent Articles, "Where do you want to go?") into Cards,
+    // then remove the source carousel + lists so they don't duplicate.
     const isHome = path === '/us/en' || path === '/us/en.html' || path === '/us/en/' || mainstreamPath(path) === '/';
     if (isHome) {
-      const heroRows = buildHomeHero(document, url);
+      const base = new URL(url);
+      const carouselRows = buildHomeCarousel(document, url);
+
+      // Convert each source article list into a Cards table, in place.
+      const articleLists = [...main.querySelectorAll('ul')].filter((ul) => ul.querySelector('article'));
+      articleLists.forEach((ul) => {
+        const cardRows = buildCardsFromArticles(document, ul, base);
+        if (cardRows) {
+          const table = WebImporter.DOMUtils.createTable(cardRows, document);
+          ul.replaceWith(table);
+        }
+      });
+
+      // Remove the source carousel; prepend our Carousel block.
       WebImporter.DOMUtils.remove(main, ['.cmp-carousel', '.carousel']);
-      if (heroRows) {
-        const heroTable = WebImporter.DOMUtils.createTable(heroRows, document);
-        main.prepend(heroTable);
+      if (carouselRows) {
+        const carouselTable = WebImporter.DOMUtils.createTable(carouselRows, document);
+        main.prepend(carouselTable);
       }
     }
 

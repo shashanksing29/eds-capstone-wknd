@@ -91,7 +91,7 @@ h6 {
   color: var(--text-color);
   font-family: var(--heading-font-family);
   font-weight: 400;
-  line-height: 1.25;
+  line-height: 1.5;
   scroll-margin: 40px;
 }
 

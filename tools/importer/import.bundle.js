@@ -148,43 +148,88 @@ var CustomImportScript = (() => {
     });
     return rows;
   }
-  function buildHomeHero(document, url) {
-    var _a, _b, _c, _d;
-    const base = new URL(url);
-    const teaser = document.querySelector(".cmp-carousel .cmp-teaser, .carousel .cmp-teaser, .cmp-teaser");
-    if (!teaser) return null;
-    const title = (_b = (_a = teaser.querySelector(".cmp-teaser__title")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
-    const desc = (_d = (_c = teaser.querySelector(".cmp-teaser__description")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
-    const ctaEl = teaser.querySelector(".cmp-teaser__action-link, a");
-    const imgEl = teaser.querySelector("img");
-    if (!title || !imgEl) return null;
-    const content = document.createElement("div");
-    const h1 = document.createElement("h1");
-    h1.textContent = title;
-    content.append(h1);
-    if (desc) {
-      const p = document.createElement("p");
-      p.textContent = desc;
-      content.append(p);
-    }
-    if (ctaEl) {
-      const p = document.createElement("p");
-      const a = document.createElement("a");
-      const href = ctaEl.getAttribute("href") || "/adventures";
-      a.href = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
-      a.textContent = ctaEl.textContent.trim() || "View Trips";
-      const strong = document.createElement("strong");
-      strong.append(a);
-      p.append(strong);
-      content.append(p);
-    }
-    const imgCell = document.createElement("div");
-    const im = document.createElement("img");
+  function absSrc(imgEl, base) {
     const src = imgEl.getAttribute("src") || "";
-    im.src = /^https?:/.test(src) ? src : new URL(src, base).href;
-    im.alt = imgEl.getAttribute("alt") || title;
-    imgCell.append(im);
-    return [["Hero"], [imgCell], [content]];
+    return /^https?:/.test(src) ? src : new URL(src, base).href;
+  }
+  function buildHomeCarousel(document, url) {
+    const base = new URL(url);
+    const slides = [...document.querySelectorAll(".cmp-carousel__item")];
+    if (slides.length === 0) return null;
+    const rows = [["Carousel"]];
+    slides.forEach((slide) => {
+      var _a, _b, _c, _d;
+      const title = (_b = (_a = slide.querySelector(".cmp-teaser__title")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+      const desc = (_d = (_c = slide.querySelector(".cmp-teaser__description")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
+      const ctaEl = slide.querySelector(".cmp-teaser__action-link, a");
+      const imgEl = slide.querySelector("img");
+      if (!title || !imgEl) return;
+      const imgCell = document.createElement("div");
+      const im = document.createElement("img");
+      im.src = absSrc(imgEl, base);
+      im.alt = imgEl.getAttribute("alt") || title;
+      imgCell.append(im);
+      const content = document.createElement("div");
+      const h = document.createElement("h2");
+      h.textContent = title;
+      content.append(h);
+      if (desc) {
+        const p = document.createElement("p");
+        p.textContent = desc;
+        content.append(p);
+      }
+      if (ctaEl) {
+        const p = document.createElement("p");
+        const a = document.createElement("a");
+        const href = ctaEl.getAttribute("href") || "/adventures";
+        a.href = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
+        a.textContent = ctaEl.textContent.trim() || "View Trips";
+        p.append(a);
+        content.append(p);
+      }
+      rows.push([imgCell, content]);
+    });
+    return rows.length > 1 ? rows : null;
+  }
+  function buildCardsFromArticles(document, listEl, base) {
+    const items = [...listEl.querySelectorAll("article, li")].filter((el, i, arr) => (
+      // keep leaf items: articles, or li that has a link+image
+      el.tagName === "ARTICLE" || !arr.some((o) => o !== el && o.contains(el) && o.tagName === "ARTICLE")
+    ));
+    const seen = /* @__PURE__ */ new Set();
+    const rows = [["Cards"]];
+    (listEl.querySelectorAll("article").length ? listEl.querySelectorAll("article") : items).forEach((art) => {
+      const link = art.querySelector("a[href]");
+      const img = art.querySelector("img");
+      if (!link || !img) return;
+      const href = mainstreamPath(link.getAttribute("href") || "");
+      if (seen.has(href)) return;
+      seen.add(href);
+      const title = [...art.querySelectorAll("a")].map((a) => a.textContent.trim()).find(Boolean) || "";
+      let desc = "";
+      art.querySelectorAll("p, div, span").forEach((n) => {
+        const t = n.textContent.trim();
+        if (t && !n.querySelector("a, img") && t !== title && t.length > desc.length) desc = t;
+      });
+      const cell = document.createElement("div");
+      const im = document.createElement("img");
+      im.src = absSrc(img, base);
+      im.alt = title;
+      cell.append(im);
+      const tp = document.createElement("p");
+      const ta = document.createElement("a");
+      ta.href = href;
+      ta.textContent = title;
+      tp.append(ta);
+      cell.append(tp);
+      if (desc) {
+        const dp = document.createElement("p");
+        dp.textContent = desc;
+        cell.append(dp);
+      }
+      rows.push([cell]);
+    });
+    return rows.length > 1 ? rows : null;
   }
   var import_default = {
     transformDOM: ({ document, url }) => {
@@ -203,11 +248,20 @@ var CustomImportScript = (() => {
       const appended = [];
       const isHome = path === "/us/en" || path === "/us/en.html" || path === "/us/en/" || mainstreamPath(path) === "/";
       if (isHome) {
-        const heroRows = buildHomeHero(document, url);
+        const base = new URL(url);
+        const carouselRows = buildHomeCarousel(document, url);
+        const articleLists = [...main.querySelectorAll("ul")].filter((ul) => ul.querySelector("article"));
+        articleLists.forEach((ul) => {
+          const cardRows = buildCardsFromArticles(document, ul, base);
+          if (cardRows) {
+            const table = WebImporter.DOMUtils.createTable(cardRows, document);
+            ul.replaceWith(table);
+          }
+        });
         WebImporter.DOMUtils.remove(main, [".cmp-carousel", ".carousel"]);
-        if (heroRows) {
-          const heroTable = WebImporter.DOMUtils.createTable(heroRows, document);
-          main.prepend(heroTable);
+        if (carouselRows) {
+          const carouselTable = WebImporter.DOMUtils.createTable(carouselRows, document);
+          main.prepend(carouselTable);
         }
       }
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
