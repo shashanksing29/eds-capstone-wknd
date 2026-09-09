@@ -175,7 +175,57 @@ function buildAdventureCards(document, main, url) {
     cell.append(p);
     rows.push([cell]);
   });
-  return WebImporter.DOMUtils ? rows : rows;
+  return rows;
+}
+
+/**
+ * Build a Hero block from the first carousel slide of the WKND home page:
+ * background image + title + description + a yellow CTA button. Returns the
+ * table rows for WebImporter.DOMUtils.createTable, or null if not found.
+ */
+function buildHomeHero(document, url) {
+  const base = new URL(url);
+  const teaser = document.querySelector('.cmp-carousel .cmp-teaser, .carousel .cmp-teaser, .cmp-teaser');
+  if (!teaser) return null;
+
+  const title = teaser.querySelector('.cmp-teaser__title')?.textContent?.trim();
+  const desc = teaser.querySelector('.cmp-teaser__description')?.textContent?.trim();
+  const ctaEl = teaser.querySelector('.cmp-teaser__action-link, a');
+  const imgEl = teaser.querySelector('img');
+  if (!title || !imgEl) return null;
+
+  // content cell
+  const content = document.createElement('div');
+  const h1 = document.createElement('h1');
+  h1.textContent = title;
+  content.append(h1);
+  if (desc) {
+    const p = document.createElement('p');
+    p.textContent = desc;
+    content.append(p);
+  }
+  if (ctaEl) {
+    const p = document.createElement('p');
+    const a = document.createElement('a');
+    const href = ctaEl.getAttribute('href') || '/adventures';
+    a.href = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
+    a.textContent = ctaEl.textContent.trim() || 'View Trips';
+    // EDS decorateButtons turns a bold/linked single-child paragraph into a button
+    const strong = document.createElement('strong');
+    strong.append(a);
+    p.append(strong);
+    content.append(p);
+  }
+
+  // image cell
+  const imgCell = document.createElement('div');
+  const im = document.createElement('img');
+  const src = imgEl.getAttribute('src') || '';
+  im.src = /^https?:/.test(src) ? src : new URL(src, base).href;
+  im.alt = imgEl.getAttribute('alt') || title;
+  imgCell.append(im);
+
+  return [['Hero'], [imgCell], [content]];
 }
 
 export default {
@@ -200,6 +250,18 @@ export default {
 
     // Build blocks appended at the end of main.
     const appended = [];
+
+    // Home page → prepend a Hero block built from the first carousel slide,
+    // then drop the source carousel so its slides don't duplicate the hero.
+    const isHome = path === '/us/en' || path === '/us/en.html' || path === '/us/en/' || mainstreamPath(path) === '/';
+    if (isHome) {
+      const heroRows = buildHomeHero(document, url);
+      WebImporter.DOMUtils.remove(main, ['.cmp-carousel', '.carousel']);
+      if (heroRows) {
+        const heroTable = WebImporter.DOMUtils.createTable(heroRows, document);
+        main.prepend(heroTable);
+      }
+    }
 
     // Adventure listing → Cards block
     if (path.endsWith('/adventures') || path.endsWith('/adventures.html')) {
