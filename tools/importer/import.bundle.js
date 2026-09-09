@@ -204,6 +204,7 @@ var CustomImportScript = (() => {
       const isHome = path === "/us/en" || path === "/us/en.html" || path === "/us/en/" || mainstreamPath(path) === "/";
       if (isHome) {
         const heroRows = buildHomeHero(document, url);
+        WebImporter.DOMUtils.remove(main, [".cmp-carousel", ".carousel"]);
         if (heroRows) {
           const heroTable = WebImporter.DOMUtils.createTable(heroRows, document);
           main.prepend(heroTable);

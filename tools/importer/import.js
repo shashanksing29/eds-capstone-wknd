@@ -251,10 +251,12 @@ export default {
     // Build blocks appended at the end of main.
     const appended = [];
 
-    // Home page → prepend a Hero block built from the first carousel slide.
+    // Home page → prepend a Hero block built from the first carousel slide,
+    // then drop the source carousel so its slides don't duplicate the hero.
     const isHome = path === '/us/en' || path === '/us/en.html' || path === '/us/en/' || mainstreamPath(path) === '/';
     if (isHome) {
       const heroRows = buildHomeHero(document, url);
+      WebImporter.DOMUtils.remove(main, ['.cmp-carousel', '.carousel']);
       if (heroRows) {
         const heroTable = WebImporter.DOMUtils.createTable(heroRows, document);
         main.prepend(heroTable);
