@@ -330,6 +330,47 @@ function buildFeaturedColumns(document, teaser, base, WebImporter) {
   return WebImporter.DOMUtils.createTable([['Columns (featured)'], [imgCell, text]], document);
 }
 
+/**
+ * Convert a WKND teaser without a pretitle (e.g. "Climbing New Zealand") into a
+ * Hero block: full-width image with a white caption card overlapping its bottom
+ * (title + description + CTA), matching the WKND home hero treatment.
+ */
+function buildFeatureHero(document, teaser, base, WebImporter) {
+  const img = teaser.querySelector('img');
+  const title = teaser.querySelector('.cmp-teaser__title')?.textContent?.trim();
+  if (!img || !title) return null;
+
+  const desc = teaser.querySelector('.cmp-teaser__description')?.textContent?.trim();
+  const ctaEl = teaser.querySelector('.cmp-teaser__action-link, a');
+
+  const imgCell = document.createElement('div');
+  const im = document.createElement('img');
+  im.src = absSrc(img, base);
+  im.alt = img.getAttribute('alt') || title;
+  imgCell.append(im);
+
+  const content = document.createElement('div');
+  const h = document.createElement('h2');
+  h.textContent = title;
+  content.append(h);
+  if (desc) {
+    const p = document.createElement('p');
+    p.textContent = desc;
+    content.append(p);
+  }
+  if (ctaEl) {
+    const p = document.createElement('p');
+    const a = document.createElement('a');
+    const href = ctaEl.getAttribute('href') || '/';
+    a.href = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
+    a.textContent = ctaEl.textContent.trim();
+    p.append(a);
+    content.append(p);
+  }
+
+  return WebImporter.DOMUtils.createTable([['Hero'], [imgCell], [content]], document);
+}
+
 export default {
   transformDOM: ({ document, url }) => {
     /* global WebImporter */
@@ -361,12 +402,17 @@ export default {
       const base = new URL(url);
       const carouselRows = buildHomeCarousel(document, url);
 
-      // Convert the non-carousel teasers (Featured Article, Climbing NZ) into
-      // 2-column Columns blocks, in place.
+      // Convert the non-carousel teasers in place. Teasers WITH a pretitle
+      // ("Featured Article") become 2-column Columns; teasers WITHOUT one
+      // ("Climbing New Zealand") become a full-width Hero with an overlapping
+      // caption card — matching the two distinct WKND layouts.
       const featuredTeasers = [...main.querySelectorAll('.cmp-teaser')]
         .filter((t) => !t.closest('.cmp-carousel') && t.querySelector('img'));
       featuredTeasers.forEach((teaser) => {
-        const table = buildFeaturedColumns(document, teaser, base, WebImporter);
+        const hasPretitle = !!teaser.querySelector('.cmp-teaser__pretitle')?.textContent?.trim();
+        const table = hasPretitle
+          ? buildFeaturedColumns(document, teaser, base, WebImporter)
+          : buildFeatureHero(document, teaser, base, WebImporter);
         if (table) teaser.replaceWith(table);
       });
 
