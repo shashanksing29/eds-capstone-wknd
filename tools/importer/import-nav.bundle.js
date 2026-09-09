@@ -24,11 +24,11 @@ var CustomImportScript = (() => {
     default: () => import_nav_default
   });
   var NAV_LINKS = [
-    ["Home", "/us/en/index"],
-    ["Magazine", "/us/en/magazine"],
-    ["Adventures", "/us/en/adventures"],
-    ["FAQs", "/us/en/faqs"],
-    ["About Us", "/us/en/about-us"]
+    ["Home", "/"],
+    ["Magazine", "/magazine"],
+    ["Adventures", "/adventures"],
+    ["FAQs", "/faqs"],
+    ["About Us", "/about-us"]
   ];
   var import_nav_default = {
     transformDOM: ({ document }) => {
@@ -36,7 +36,7 @@ var CustomImportScript = (() => {
       const brand = document.createElement("div");
       const brandP = document.createElement("p");
       const brandLink = document.createElement("a");
-      brandLink.href = "/us/en/index";
+      brandLink.href = "/";
       brandLink.textContent = "WKND";
       brandP.append(brandLink);
       brand.append(brandP);

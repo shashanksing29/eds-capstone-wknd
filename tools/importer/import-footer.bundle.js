@@ -24,11 +24,11 @@ var CustomImportScript = (() => {
     default: () => import_footer_default
   });
   var NAV_LINKS = [
-    ["Home", "/us/en/index"],
-    ["Magazine", "/us/en/magazine"],
-    ["Adventures", "/us/en/adventures"],
-    ["FAQs", "/us/en/faqs"],
-    ["About Us", "/us/en/about-us"]
+    ["Home", "/"],
+    ["Magazine", "/magazine"],
+    ["Adventures", "/adventures"],
+    ["FAQs", "/faqs"],
+    ["About Us", "/about-us"]
   ];
   var SOCIAL = [["Facebook", "#"], ["Twitter", "#"], ["Instagram", "#"]];
   var import_footer_default = {
