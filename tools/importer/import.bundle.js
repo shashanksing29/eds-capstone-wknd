@@ -273,6 +273,38 @@ var CustomImportScript = (() => {
     imgCell.append(im);
     return WebImporter2.DOMUtils.createTable([["Columns (featured)"], [imgCell, text]], document);
   }
+  function buildFeatureHero(document, teaser, base, WebImporter2) {
+    var _a, _b, _c, _d;
+    const img = teaser.querySelector("img");
+    const title = (_b = (_a = teaser.querySelector(".cmp-teaser__title")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+    if (!img || !title) return null;
+    const desc = (_d = (_c = teaser.querySelector(".cmp-teaser__description")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
+    const ctaEl = teaser.querySelector(".cmp-teaser__action-link, a");
+    const imgCell = document.createElement("div");
+    const im = document.createElement("img");
+    im.src = absSrc(img, base);
+    im.alt = img.getAttribute("alt") || title;
+    imgCell.append(im);
+    const content = document.createElement("div");
+    const h = document.createElement("h2");
+    h.textContent = title;
+    content.append(h);
+    if (desc) {
+      const p = document.createElement("p");
+      p.textContent = desc;
+      content.append(p);
+    }
+    if (ctaEl) {
+      const p = document.createElement("p");
+      const a = document.createElement("a");
+      const href = ctaEl.getAttribute("href") || "/";
+      a.href = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
+      a.textContent = ctaEl.textContent.trim();
+      p.append(a);
+      content.append(p);
+    }
+    return WebImporter2.DOMUtils.createTable([["Hero"], [imgCell], [content]], document);
+  }
   var import_default = {
     transformDOM: ({ document, url }) => {
       const main = pickMain(document);
@@ -294,7 +326,9 @@ var CustomImportScript = (() => {
         const carouselRows = buildHomeCarousel(document, url);
         const featuredTeasers = [...main.querySelectorAll(".cmp-teaser")].filter((t) => !t.closest(".cmp-carousel") && t.querySelector("img"));
         featuredTeasers.forEach((teaser) => {
-          const table = buildFeaturedColumns(document, teaser, base, WebImporter);
+          var _a, _b;
+          const hasPretitle = !!((_b = (_a = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim());
+          const table = hasPretitle ? buildFeaturedColumns(document, teaser, base, WebImporter) : buildFeatureHero(document, teaser, base, WebImporter);
           if (table) teaser.replaceWith(table);
         });
         const articleLists = [...main.querySelectorAll("ul")].filter((ul) => ul.querySelector("article"));

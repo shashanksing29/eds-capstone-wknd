@@ -1,4 +1,8 @@
-/* WKND hero — full-bleed image with an overlaid content panel + yellow CTA */
+/*
+ * WKND hero / feature block — full-width image with a white caption card
+ * overlapping its bottom-left (dark title, description, yellow CTA). Matches
+ * the WKND home hero and the "Climbing New Zealand" feature.
+ */
 .hero-container .hero-wrapper {
   max-width: unset;
   padding: 0;
@@ -6,55 +10,53 @@
 
 .hero.block {
   position: relative;
-  display: grid;
-  min-height: 78vh;
-  max-height: 820px;
 }
 
-/* background image fills the block */
+/* full-width image */
 .hero.block .hero-image {
-  grid-area: 1 / 1;
   line-height: 0;
 }
 
 .hero.block .hero-image picture,
 .hero.block .hero-image img {
   width: 100%;
-  height: 100%;
+  height: 56vh;
+  min-height: 340px;
+  max-height: 640px;
   object-fit: cover;
 }
 
-/* overlaid content panel, bottom-left like WKND */
+/* white caption card, pulled up to overlap the image bottom, left-aligned */
 .hero.block .hero-content {
-  grid-area: 1 / 1;
-  z-index: 1;
-  align-self: end;
   box-sizing: border-box;
-  width: 100%;
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 48px);
   max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: 0 24px 48px;
+  margin: -110px auto 0;
+  background: var(--background-color);
+  padding: 40px 44px 36px;
 }
 
 .hero.block .hero-content > * {
-  max-width: 620px;
+  max-width: 720px;
 }
 
-.hero.block .hero-content h1 {
+.hero.block .hero-content h1,
+.hero.block .hero-content h2 {
   margin: 0 0 12px;
-  color: var(--background-color);
+  color: var(--text-color);
   font-family: var(--heading-font-family);
-  font-size: clamp(32px, 5vw, 56px);
-  line-height: 1.1;
-  text-shadow: 0 2px 16px rgb(0 0 0 / 45%);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .hero.block .hero-content p {
-  margin: 0 0 24px;
-  color: var(--background-color);
+  margin: 0 0 20px;
+  color: var(--text-color);
   font-size: var(--body-font-size-m);
   line-height: 1.5;
-  text-shadow: 0 1px 10px rgb(0 0 0 / 50%);
 }
 
 .hero.block .hero-content p:last-child {
@@ -62,29 +64,25 @@
 }
 
 /* yellow CTA button */
-.hero.block .hero-content a.button:any-link {
+.hero.block .hero-content a:any-link {
   display: inline-block;
-  min-width: 180px;
-  padding: 0.9rem 2rem;
-  border: 2px solid var(--brand-primary);
-  border-radius: 0;
+  padding: 14px 35px;
   background-color: var(--brand-primary);
   color: var(--text-color);
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
   text-decoration: none;
-  text-shadow: none;
 }
 
-.hero.block .hero-content a.button:hover {
-  border-color: var(--text-color);
+.hero.block .hero-content a:any-link:hover {
   background-color: var(--text-color);
   color: var(--brand-primary);
 }
 
 @media (width >= 900px) {
   .hero.block .hero-content {
-    padding: 0 32px 72px;
+    width: 100%;
+    padding: 48px 56px 40px;
   }
 }
