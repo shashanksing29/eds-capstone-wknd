@@ -377,10 +377,73 @@ var CustomImportScript = (() => {
     });
     return rows.length > 1 ? WebImporter2.DOMUtils.createTable(rows, document) : null;
   }
+  function extractProfileCards(document, base) {
+    const seen = /* @__PURE__ */ new Set();
+    const all = [];
+    [...document.querySelectorAll(".experiencefragment, .cmp-experiencefragment")].forEach((xf) => {
+      var _a, _b, _c, _d, _e, _f;
+      const name = (_b = (_a = xf.querySelector("h3")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+      const role = (_d = (_c = xf.querySelector("h5")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
+      const imgEl = xf.querySelector("img");
+      if (!name || !imgEl) return;
+      if (seen.has(name)) return;
+      seen.add(name);
+      let section = "";
+      let node = xf;
+      while (node) {
+        let prev = node.previousElementSibling;
+        while (prev) {
+          const h2 = ((_e = prev.matches) == null ? void 0 : _e.call(prev, "h2")) ? prev : (_f = prev.querySelector) == null ? void 0 : _f.call(prev, "h2");
+          if (h2) {
+            section = h2.textContent.trim();
+            break;
+          }
+          prev = prev.previousElementSibling;
+        }
+        if (section) break;
+        node = node.parentElement;
+      }
+      all.push({
+        name,
+        role: role || "",
+        img: absSrc(imgEl, base),
+        section: /guide/i.test(section) ? "guides" : "contributors"
+      });
+    });
+    return {
+      contributors: all.filter((c) => c.section === "contributors"),
+      guides: all.filter((c) => c.section === "guides")
+    };
+  }
+  function buildProfileCardsTable(document, people) {
+    if (!people.length) return null;
+    const rows = [["Cards (profile)"]];
+    people.forEach(({ name, role, img }) => {
+      const cell = document.createElement("div");
+      const im = document.createElement("img");
+      im.src = img;
+      im.alt = name;
+      cell.append(im);
+      const nameP = document.createElement("p");
+      const strong = document.createElement("strong");
+      strong.textContent = name;
+      nameP.append(strong);
+      cell.append(nameP);
+      if (role) {
+        const roleP = document.createElement("p");
+        roleP.textContent = role;
+        cell.append(roleP);
+      }
+      rows.push([cell]);
+    });
+    return rows;
+  }
   var import_default = {
     transformDOM: ({ document, url }) => {
       const main = pickMain(document);
       const path = new URL(url).pathname;
+      const isAbout = path.endsWith("/about-us") || path.endsWith("/about-us.html");
+      const profiles = isAbout ? extractProfileCards(document, new URL(url)) : null;
       stripChrome(main, WebImporter);
       absolutizeImages(main, url);
       fixLinks(main);
@@ -480,6 +543,20 @@ var CustomImportScript = (() => {
         }
         const help = [...main.querySelectorAll("h2, h3")].find((h) => /need more help/i.test(h.textContent));
         if (help) help.before(document.createElement("hr"));
+      }
+      if (isAbout && profiles) {
+        const insertAfterHeading = (matcher, people) => {
+          const heading = [...main.querySelectorAll("h2")].find((h) => matcher.test(h.textContent));
+          const rows = buildProfileCardsTable(document, people);
+          if (!heading || !rows) return;
+          const table = WebImporter.DOMUtils.createTable(rows, document);
+          let anchor = heading;
+          const next = heading.nextElementSibling;
+          if (next && next.tagName === "P") anchor = next;
+          anchor.after(table);
+        };
+        insertAfterHeading(/our contributors/i, profiles.contributors);
+        insertAfterHeading(/wknd guides/i, profiles.guides);
       }
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);

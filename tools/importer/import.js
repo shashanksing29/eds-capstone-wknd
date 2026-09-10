@@ -448,11 +448,83 @@ function buildFaqAccordion(document, root, WebImporter) {
   return rows.length > 1 ? WebImporter.DOMUtils.createTable(rows, document) : null;
 }
 
+/**
+ * Extract the About Us contributor/guide profile cards from the source (they
+ * live in .experiencefragment blocks that stripChrome would otherwise remove).
+ * Returns { contributors, guides } — arrays of { name, role, img, socials } —
+ * split by which section heading precedes each card. Dedupes responsive copies.
+ */
+function extractProfileCards(document, base) {
+  const seen = new Set();
+  const all = [];
+  [...document.querySelectorAll('.experiencefragment, .cmp-experiencefragment')].forEach((xf) => {
+    const name = xf.querySelector('h3')?.textContent?.trim();
+    const role = xf.querySelector('h5')?.textContent?.trim();
+    const imgEl = xf.querySelector('img');
+    if (!name || !imgEl) return;
+    if (seen.has(name)) return;
+    seen.add(name);
+    // section: walk backwards to the nearest h2 heading text
+    let section = '';
+    let node = xf;
+    while (node) {
+      let prev = node.previousElementSibling;
+      while (prev) {
+        const h2 = prev.matches?.('h2') ? prev : prev.querySelector?.('h2');
+        if (h2) { section = h2.textContent.trim(); break; }
+        prev = prev.previousElementSibling;
+      }
+      if (section) break;
+      node = node.parentElement;
+    }
+    all.push({
+      name,
+      role: role || '',
+      img: absSrc(imgEl, base),
+      section: /guide/i.test(section) ? 'guides' : 'contributors',
+    });
+  });
+  return {
+    contributors: all.filter((c) => c.section === 'contributors'),
+    guides: all.filter((c) => c.section === 'guides'),
+  };
+}
+
+/** Build a Cards (profile) table from a list of {name, role, img}. */
+function buildProfileCardsTable(document, people) {
+  if (!people.length) return null;
+  const rows = [['Cards (profile)']];
+  people.forEach(({ name, role, img }) => {
+    const cell = document.createElement('div');
+    const im = document.createElement('img');
+    im.src = img;
+    im.alt = name;
+    cell.append(im);
+    const nameP = document.createElement('p');
+    const strong = document.createElement('strong');
+    strong.textContent = name;
+    nameP.append(strong);
+    cell.append(nameP);
+    if (role) {
+      const roleP = document.createElement('p');
+      roleP.textContent = role;
+      cell.append(roleP);
+    }
+    rows.push([cell]);
+  });
+  return rows;
+}
+
 export default {
   transformDOM: ({ document, url }) => {
     /* global WebImporter */
     const main = pickMain(document);
     const path = new URL(url).pathname;
+
+    // About Us: capture the contributor/guide profile cards BEFORE stripChrome
+    // removes their .experiencefragment wrappers.
+    const isAbout = path.endsWith('/about-us') || path.endsWith('/about-us.html');
+    const profiles = isAbout ? extractProfileCards(document, new URL(url)) : null;
 
     stripChrome(main, WebImporter);
     absolutizeImages(main, url);
@@ -599,6 +671,24 @@ export default {
       const help = [...main.querySelectorAll('h2, h3')]
         .find((h) => /need more help/i.test(h.textContent));
       if (help) help.before(document.createElement('hr'));
+    }
+
+    // About Us → rebuild the contributor/guide profile-card grids (captured
+    // before stripChrome) and insert each after its section heading + intro.
+    if (isAbout && profiles) {
+      const insertAfterHeading = (matcher, people) => {
+        const heading = [...main.querySelectorAll('h2')].find((h) => matcher.test(h.textContent));
+        const rows = buildProfileCardsTable(document, people);
+        if (!heading || !rows) return;
+        const table = WebImporter.DOMUtils.createTable(rows, document);
+        // insert after the intro paragraph that follows the heading, if present
+        let anchor = heading;
+        const next = heading.nextElementSibling;
+        if (next && next.tagName === 'P') anchor = next;
+        anchor.after(table);
+      };
+      insertAfterHeading(/our contributors/i, profiles.contributors);
+      insertAfterHeading(/wknd guides/i, profiles.guides);
     }
 
     // Metadata block (also used to feed the query index)
