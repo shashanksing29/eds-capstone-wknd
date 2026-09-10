@@ -545,6 +545,75 @@ function buildProfileCardsTable(document, people) {
   return rows;
 }
 
+/**
+ * Extract the article author byline (.cmp-byline): name, occupation and photo,
+ * plus the facebook/twitter/instagram links. Must run BEFORE stripChrome, which
+ * removes the byline's experience-fragment wrapper. Returns null when absent.
+ */
+function extractArticleByline(document, base) {
+  const bio = document.querySelector('.cmp-byline');
+  if (!bio) return null;
+  const name = bio.querySelector('.cmp-byline__name')?.textContent?.trim();
+  const role = bio.querySelector('.cmp-byline__occupations')?.textContent?.trim();
+  const imgEl = bio.querySelector('img');
+  if (!name) return null;
+  // Social links live in a sibling container next to .cmp-byline — search the
+  // byline's ancestor (up to 3 levels) for facebook/twitter/instagram links.
+  let scope = bio;
+  for (let i = 0; i < 3; i += 1) {
+    if (scope.parentElement && scope.parentElement.querySelector('a[href]')) {
+      scope = scope.parentElement;
+      break;
+    }
+    if (scope.parentElement) scope = scope.parentElement;
+  }
+  const socials = [...scope.querySelectorAll('a[href]')].map((a) => {
+    const label = (a.getAttribute('aria-label') || a.getAttribute('title') || a.textContent || '').trim();
+    const platform = (label.split(/\s+/)[0] || '').toLowerCase();
+    return { platform, href: a.getAttribute('href') || '#' };
+  }).filter((s) => /facebook|twitter|instagram/.test(s.platform));
+  return {
+    name, role: role || '', img: imgEl ? absSrc(imgEl, base) : '', socials,
+  };
+}
+
+/**
+ * Build an Author Bio block: [img] | [name + role + social links]. author-bio.js
+ * renders the round photo and the social icon bar.
+ */
+function buildAuthorBioTable(document, byline) {
+  if (!byline) return null;
+  const imgCell = document.createElement('div');
+  if (byline.img) {
+    const im = document.createElement('img');
+    im.src = byline.img;
+    im.alt = byline.name;
+    imgCell.append(im);
+  }
+  const body = document.createElement('div');
+  const nameP = document.createElement('p');
+  const strong = document.createElement('strong');
+  strong.textContent = byline.name;
+  nameP.append(strong);
+  body.append(nameP);
+  if (byline.role) {
+    const roleP = document.createElement('p');
+    roleP.textContent = byline.role;
+    body.append(roleP);
+  }
+  if (byline.socials && byline.socials.length) {
+    const sp = document.createElement('p');
+    byline.socials.forEach((s) => {
+      const a = document.createElement('a');
+      a.href = s.href;
+      a.textContent = s.platform;
+      sp.append(a);
+    });
+    body.append(sp);
+  }
+  return [['Author Bio'], [imgCell, body]];
+}
+
 export default {
   transformDOM: ({ document, url }) => {
     /* global WebImporter */
@@ -555,6 +624,11 @@ export default {
     // removes their .experiencefragment wrappers.
     const isAbout = path.endsWith('/about-us') || path.endsWith('/about-us.html');
     const profiles = isAbout ? extractProfileCards(document, new URL(url)) : null;
+
+    // Magazine article: capture the author byline BEFORE stripChrome removes
+    // its experience-fragment wrapper.
+    const isArticle = path.includes('/magazine/') && !path.endsWith('/magazine') && !path.endsWith('/magazine.html');
+    const byline = isArticle ? extractArticleByline(document, new URL(url)) : null;
 
     stripChrome(main, WebImporter);
     absolutizeImages(main, url);
@@ -718,6 +792,47 @@ export default {
       };
       insertAfterHeading(/our contributors/i, /most compelling stories/i, profiles.contributors);
       insertAfterHeading(/wknd guides/i, /extraordinary travel guides/i, profiles.guides);
+    }
+
+    // Magazine article detail → breadcrumb eyebrow, full-width hero in its own
+    // section, then a two-column body (article left, "Share this story"
+    // sidebar right), plus an author-bio footer.
+    if (isArticle) {
+      const h1el = main.querySelector('h1');
+
+      // Breadcrumb eyebrow above the title: "Magazine / {Page Name}".
+      if (h1el) {
+        const slug = mainstreamPath(path).split('/').pop() || '';
+        const pageName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const eyebrow = document.createElement('p');
+        const magLink = document.createElement('a');
+        magLink.href = '/magazine';
+        magLink.textContent = 'Magazine';
+        eyebrow.append(magLink);
+        if (pageName) eyebrow.append(document.createTextNode(` / ${pageName}`));
+        h1el.before(eyebrow);
+      }
+
+      // Split the hero image (first picture) into its own full-width section.
+      const heroPic = main.querySelector('picture, img');
+      const heroP = heroPic ? (heroPic.closest('p') || heroPic.parentElement) : null;
+      if (heroP) heroP.after(document.createElement('hr'));
+
+      // Author-bio footer at the end of the article column.
+      const bioRows = buildAuthorBioTable(document, byline);
+      if (bioRows) appended.push(WebImporter.DOMUtils.createTable(bioRows, document));
+
+      // Sidebar section: "Share this story" + dynamic list of other articles.
+      appended.push(document.createElement('hr'));
+      const shareHeading = document.createElement('h5');
+      shareHeading.textContent = 'Share this Story';
+      appended.push(shareHeading);
+      const listRows = [
+        ['Article List (compact)'],
+        ['category', 'Magazine'],
+        ['template', 'article'],
+      ];
+      appended.push(WebImporter.DOMUtils.createTable(listRows, document));
     }
 
     // Metadata block (also used to feed the query index)

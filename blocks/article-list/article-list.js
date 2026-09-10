@@ -21,6 +21,7 @@ const DEFAULTS = {
   template: 'article',
   limit: 0,
   path: '',
+  exclude: '',
 };
 
 /** Read the block's key/value config rows into an options object. */
@@ -39,6 +40,7 @@ function readConfig(block) {
 
 /** True when the indexed row matches the configured filters. */
 function matches(row, cfg) {
+  if (cfg.exclude && (row.path || '') === cfg.exclude) return false;
   if (cfg.path && !(row.path || '').startsWith(cfg.path)) return false;
   // Only apply a filter when the index actually has that column populated.
   if (cfg.category && row.category && row.category !== cfg.category) return false;
@@ -48,6 +50,34 @@ function matches(row, cfg) {
     return (row.path || '').includes('/magazine/');
   }
   return true;
+}
+
+/** Build a compact sidebar row (title + date, no image). */
+function buildCompactCard(article) {
+  const li = document.createElement('li');
+  li.className = 'article-list-compact-card';
+  const link = document.createElement('a');
+  link.href = article.path;
+
+  const title = document.createElement('span');
+  title.className = 'article-list-compact-title';
+  title.textContent = article.title || article.path;
+  link.append(title);
+
+  if (article.date) {
+    const ts = parseInt(article.date, 10);
+    if (!Number.isNaN(ts) && ts > 0) {
+      const d = new Date(ts * 1000);
+      const date = document.createElement('span');
+      date.className = 'article-list-compact-date';
+      date.textContent = d.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
+      });
+      link.append(date);
+    }
+  }
+  li.append(link);
+  return li;
 }
 
 /** Build one article card as an <li>. */
@@ -117,10 +147,13 @@ function buildCard(article) {
 
 export default async function decorate(block) {
   const cfg = readConfig(block);
+  const compact = block.classList.contains('compact');
+  // On an article page, drop the current article from its own sidebar list.
+  if (compact && !cfg.exclude) cfg.exclude = window.location.pathname.replace(/\.html$/, '');
   block.textContent = '';
 
   const ul = document.createElement('ul');
-  ul.className = 'article-list-cards';
+  ul.className = compact ? 'article-list-compact' : 'article-list-cards';
 
   try {
     let articles = await ffetch(cfg.index)
@@ -140,7 +173,9 @@ export default async function decorate(block) {
       return;
     }
 
-    articles.forEach((article) => ul.append(buildCard(article)));
+    articles.forEach((article) => ul.append(
+      compact ? buildCompactCard(article) : buildCard(article),
+    ));
     block.append(ul);
   } catch (e) {
     // Index may not exist yet (e.g. before first publish). Fail quietly.
