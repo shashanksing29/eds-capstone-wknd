@@ -434,9 +434,20 @@ export default {
       }
     }
 
-    // Adventure listing → Cards block
+    // Adventure listing → single Cards block.
+    // The source uses JS filter tabs (All/Climbing/Cycling/…), so it ships one
+    // article list per category — all visible in static HTML, which duplicates
+    // content. Build one Cards block from all adventures, then strip the source
+    // filter tabs (OL) and every source article list (UL) so nothing repeats.
     if (path.endsWith('/adventures') || path.endsWith('/adventures.html')) {
       const rows = buildAdventureCards(document, main, url);
+      // remove the category filter tab list and all source article lists
+      main.querySelectorAll('ol').forEach((ol) => {
+        if (/climbing|cycling|skiing|surfing|travel/i.test(ol.textContent)) ol.remove();
+      });
+      main.querySelectorAll('ul').forEach((ul) => {
+        if (ul.querySelector('a[href*="/adventures/"], article')) ul.remove();
+      });
       if (rows) {
         const table = WebImporter.DOMUtils.createTable(rows, document);
         appended.push(table);
