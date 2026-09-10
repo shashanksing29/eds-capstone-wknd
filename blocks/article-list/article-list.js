@@ -67,7 +67,8 @@ function formatDate(value, opts, locale = 'en-US') {
     d = new Date(`${value}T00:00:00Z`);
   }
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString(locale, { timeZone: 'UTC', ...opts });
+  // "Sept" → "Sep": some locales abbreviate September with 4 letters.
+  return d.toLocaleDateString(locale, { timeZone: 'UTC', ...opts }).replace('Sept', 'Sep');
 }
 
 /** Build a compact sidebar row (title + date, no image). */
