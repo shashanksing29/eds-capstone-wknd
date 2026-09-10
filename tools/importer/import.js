@@ -443,14 +443,36 @@ export default {
       }
     }
 
-    // Magazine listing → dynamic Article List block driven by query-index.
-    // Remove the static "All Articles" list and replace with the block so new
-    // articles appear automatically once published + indexed.
+    // Magazine listing: Featured Article (2-col) + dynamic Article List block.
     if (path.endsWith('/magazine') || path.endsWith('/magazine.html')) {
+      const base = new URL(url);
+
+      // Featured Article teaser (has a pretitle) → 2-column Columns block.
+      // Drop the members-only teasers (Alaskan Adventure, Fly Fishing) — they
+      // are gated content not shown on the public listing.
+      [...main.querySelectorAll('.cmp-teaser')].forEach((teaser) => {
+        if (!teaser.querySelector('img')) return;
+        const hasPretitle = !!teaser.querySelector('.cmp-teaser__pretitle')?.textContent?.trim();
+        if (hasPretitle) {
+          const table = buildFeaturedColumns(document, teaser, base, WebImporter);
+          if (table) teaser.replaceWith(table); else teaser.remove();
+        } else {
+          teaser.remove();
+        }
+      });
+
+      // Remove the source article list + any leftover "Members Only" heading/text
+      // and duplicate "All Articles"/"Featured Article" bits.
       main.querySelectorAll('ul').forEach((ul) => {
-        // the article list is the UL of teaser links
         if (ul.querySelector('a')) ul.remove();
       });
+      main.querySelectorAll('h2, h3, p, hr').forEach((el) => {
+        const t = el.textContent.trim().toLowerCase();
+        if (['all articles', 'members only', 'featured article'].includes(t)) el.remove();
+        if (/^sign in to un-?lock/i.test(el.textContent.trim())) el.remove();
+      });
+
+      // Append a single "All Articles" heading + the dynamic Article List block.
       const heading = document.createElement('h2');
       heading.textContent = 'All Articles';
       appended.push(heading);

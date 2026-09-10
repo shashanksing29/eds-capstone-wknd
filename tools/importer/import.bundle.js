@@ -353,8 +353,26 @@ var CustomImportScript = (() => {
         }
       }
       if (path.endsWith("/magazine") || path.endsWith("/magazine.html")) {
+        const base = new URL(url);
+        [...main.querySelectorAll(".cmp-teaser")].forEach((teaser) => {
+          var _a, _b;
+          if (!teaser.querySelector("img")) return;
+          const hasPretitle = !!((_b = (_a = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim());
+          if (hasPretitle) {
+            const table2 = buildFeaturedColumns(document, teaser, base, WebImporter);
+            if (table2) teaser.replaceWith(table2);
+            else teaser.remove();
+          } else {
+            teaser.remove();
+          }
+        });
         main.querySelectorAll("ul").forEach((ul) => {
           if (ul.querySelector("a")) ul.remove();
+        });
+        main.querySelectorAll("h2, h3, p, hr").forEach((el) => {
+          const t = el.textContent.trim().toLowerCase();
+          if (["all articles", "members only", "featured article"].includes(t)) el.remove();
+          if (/^sign in to un-?lock/i.test(el.textContent.trim())) el.remove();
         });
         const heading = document.createElement("h2");
         heading.textContent = "All Articles";
