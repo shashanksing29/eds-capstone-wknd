@@ -110,6 +110,8 @@ var CustomImportScript = (() => {
       meta.Template = "magazine";
     } else if (path.endsWith("/faqs") || path.endsWith("/faqs.html")) {
       meta.Template = "faqs";
+    } else if (path.endsWith("/about-us") || path.endsWith("/about-us.html")) {
+      meta.Template = "about";
     } else if (path === "/us/en" || path === "/us/en.html" || path === "/us/en/" || mainstreamPath(path) === "/") {
       meta.Template = "home";
     }

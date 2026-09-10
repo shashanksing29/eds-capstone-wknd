@@ -156,19 +156,21 @@
   overflow: visible;
 }
 
-/* social icon bar under each profile */
+/* social icon bar under each profile — dark filled bar with white icons */
 .cards.profile .cards-card-social {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
-  gap: 14px;
-  margin: 14px 0 0;
+  gap: 20px;
+  margin: 16px auto 0;
+  padding: 12px 18px;
+  background-color: var(--text-color);
 }
 
 .cards.profile .cards-card-social a.cards-social-icon {
   display: inline-block;
-  width: 20px;
-  height: 20px;
-  background-color: var(--text-color);
+  width: 18px;
+  height: 18px;
+  background-color: var(--background-color);
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
