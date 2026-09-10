@@ -91,3 +91,49 @@
   color: var(--muted-color);
   font-style: italic;
 }
+
+/* Compact sidebar variant (article "Share this story" list) */
+.article-list.compact .article-list-compact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.article-list.compact .article-list-compact-card {
+  margin: 0;
+  border-top: 1px solid #dcdcdc;
+}
+
+.article-list.compact .article-list-compact-card:last-child {
+  border-bottom: 1px solid #dcdcdc;
+}
+
+.article-list.compact .article-list-compact-card a {
+  display: block;
+  padding: 18px 0;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+.article-list.compact .article-list-compact-title {
+  display: block;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.article-list.compact .article-list-compact-card a:hover .article-list-compact-title {
+  color: var(--brand-primary);
+}
+
+.article-list.compact .article-list-compact-date {
+  display: block;
+  margin: 6px 0 0;
+  color: var(--muted-color);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

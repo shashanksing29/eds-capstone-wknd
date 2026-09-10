@@ -463,12 +463,74 @@ var CustomImportScript = (() => {
     });
     return rows;
   }
+  function extractArticleByline(document, base) {
+    var _a, _b, _c, _d;
+    const bio = document.querySelector(".cmp-byline");
+    if (!bio) return null;
+    const name = (_b = (_a = bio.querySelector(".cmp-byline__name")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+    const role = (_d = (_c = bio.querySelector(".cmp-byline__occupations")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim();
+    const imgEl = bio.querySelector("img");
+    if (!name) return null;
+    let scope = bio;
+    for (let i = 0; i < 3; i += 1) {
+      if (scope.parentElement && scope.parentElement.querySelector("a[href]")) {
+        scope = scope.parentElement;
+        break;
+      }
+      if (scope.parentElement) scope = scope.parentElement;
+    }
+    const socials = [...scope.querySelectorAll("a[href]")].map((a) => {
+      const label = (a.getAttribute("aria-label") || a.getAttribute("title") || a.textContent || "").trim();
+      const platform = (label.split(/\s+/)[0] || "").toLowerCase();
+      return { platform, href: a.getAttribute("href") || "#" };
+    }).filter((s) => /facebook|twitter|instagram/.test(s.platform));
+    return {
+      name,
+      role: role || "",
+      img: imgEl ? absSrc(imgEl, base) : "",
+      socials
+    };
+  }
+  function buildAuthorBioTable(document, byline) {
+    if (!byline) return null;
+    const imgCell = document.createElement("div");
+    if (byline.img) {
+      const im = document.createElement("img");
+      im.src = byline.img;
+      im.alt = byline.name;
+      imgCell.append(im);
+    }
+    const body = document.createElement("div");
+    const nameP = document.createElement("p");
+    const strong = document.createElement("strong");
+    strong.textContent = byline.name;
+    nameP.append(strong);
+    body.append(nameP);
+    if (byline.role) {
+      const roleP = document.createElement("p");
+      roleP.textContent = byline.role;
+      body.append(roleP);
+    }
+    if (byline.socials && byline.socials.length) {
+      const sp = document.createElement("p");
+      byline.socials.forEach((s) => {
+        const a = document.createElement("a");
+        a.href = s.href;
+        a.textContent = s.platform;
+        sp.append(a);
+      });
+      body.append(sp);
+    }
+    return [["Author Bio"], [imgCell, body]];
+  }
   var import_default = {
     transformDOM: ({ document, url }) => {
       const main = pickMain(document);
       const path = new URL(url).pathname;
       const isAbout = path.endsWith("/about-us") || path.endsWith("/about-us.html");
       const profiles = isAbout ? extractProfileCards(document, new URL(url)) : null;
+      const isArticle = path.includes("/magazine/") && !path.endsWith("/magazine") && !path.endsWith("/magazine.html");
+      const byline = isArticle ? extractArticleByline(document, new URL(url)) : null;
       stripChrome(main, WebImporter);
       absolutizeImages(main, url);
       fixLinks(main);
@@ -580,6 +642,35 @@ var CustomImportScript = (() => {
         };
         insertAfterHeading(/our contributors/i, /most compelling stories/i, profiles.contributors);
         insertAfterHeading(/wknd guides/i, /extraordinary travel guides/i, profiles.guides);
+      }
+      if (isArticle) {
+        const h1el = main.querySelector("h1");
+        if (h1el) {
+          const slug = mainstreamPath(path).split("/").pop() || "";
+          const pageName = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          const eyebrow = document.createElement("p");
+          const magLink = document.createElement("a");
+          magLink.href = "/magazine";
+          magLink.textContent = "Magazine";
+          eyebrow.append(magLink);
+          if (pageName) eyebrow.append(document.createTextNode(` / ${pageName}`));
+          h1el.before(eyebrow);
+        }
+        const heroPic = main.querySelector("picture, img");
+        const heroP = heroPic ? heroPic.closest("p") || heroPic.parentElement : null;
+        if (heroP) heroP.after(document.createElement("hr"));
+        const bioRows = buildAuthorBioTable(document, byline);
+        if (bioRows) appended.push(WebImporter.DOMUtils.createTable(bioRows, document));
+        appended.push(document.createElement("hr"));
+        const shareHeading = document.createElement("h5");
+        shareHeading.textContent = "Share this Story";
+        appended.push(shareHeading);
+        const listRows = [
+          ["Article List (compact)"],
+          ["category", "Magazine"],
+          ["template", "article"]
+        ];
+        appended.push(WebImporter.DOMUtils.createTable(listRows, document));
       }
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);
