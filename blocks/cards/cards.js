@@ -29,6 +29,21 @@ export default function decorate(block) {
       cats.forEach((c) => allCats.add(c));
       catP.remove();
     }
+
+    // a paragraph of only facebook/twitter/instagram links → social icon bar
+    const socialP = [...li.querySelectorAll('p')].find((p) => {
+      const links = [...p.querySelectorAll('a')];
+      return links.length > 0 && links.every((a) => /^(facebook|twitter|instagram)$/i.test(a.textContent.trim()));
+    });
+    if (socialP) {
+      socialP.classList.add('cards-card-social');
+      socialP.querySelectorAll('a').forEach((a) => {
+        const network = a.textContent.trim().toLowerCase();
+        a.setAttribute('aria-label', network);
+        a.textContent = '';
+        a.classList.add('cards-social-icon', `cards-social-${network}`);
+      });
+    }
     ul.append(li);
   });
 
