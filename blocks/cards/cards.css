@@ -1,4 +1,39 @@
 /* WKND cards — clean image-over-title grid, no borders */
+
+/* filter tabs (Current Adventures) */
+.cards .cards-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 28px;
+}
+
+.cards .cards-filter {
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--text-color);
+  font-family: var(--body-font-family);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.cards .cards-filter[aria-selected="true"] {
+  background: var(--text-color);
+  color: var(--background-color);
+}
+
+.cards .cards-filter:hover {
+  color: var(--brand-primary);
+}
+
+.cards .cards-filter[aria-selected="true"]:hover {
+  color: var(--background-color);
+}
+
 .cards > ul {
   list-style: none;
   margin: 0;
