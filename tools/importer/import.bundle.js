@@ -393,7 +393,14 @@ var CustomImportScript = (() => {
         }
       }
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
+        const base = new URL(url);
         const rows = buildAdventureCards(document, main, url);
+        const intro = [...main.querySelectorAll(".cmp-teaser")].find((t) => t.querySelector("img") && !t.closest('[role="tabpanel"]'));
+        if (intro) {
+          const heroTable = buildFeatureHero(document, intro, base, WebImporter);
+          if (heroTable) intro.replaceWith(heroTable);
+          else intro.remove();
+        }
         main.querySelectorAll("ol").forEach((ol) => {
           if (/climbing|cycling|skiing|surfing|travel/i.test(ol.textContent)) ol.remove();
         });

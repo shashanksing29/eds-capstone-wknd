@@ -486,7 +486,18 @@ export default {
     // content. Build one Cards block from all adventures, then strip the source
     // filter tabs (OL) and every source article list (UL) so nothing repeats.
     if (path.endsWith('/adventures') || path.endsWith('/adventures.html')) {
+      const base = new URL(url);
       const rows = buildAdventureCards(document, main, url);
+
+      // Intro teaser ("Experience the world with us") → full-width Hero with an
+      // overlapping caption card, matching WKND.
+      const intro = [...main.querySelectorAll('.cmp-teaser')]
+        .find((t) => t.querySelector('img') && !t.closest('[role="tabpanel"]'));
+      if (intro) {
+        const heroTable = buildFeatureHero(document, intro, base, WebImporter);
+        if (heroTable) intro.replaceWith(heroTable); else intro.remove();
+      }
+
       // remove the category filter tab list and all source article lists
       main.querySelectorAll('ol').forEach((ol) => {
         if (/climbing|cycling|skiing|surfing|travel/i.test(ol.textContent)) ol.remove();
