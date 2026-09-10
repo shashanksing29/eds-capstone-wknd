@@ -112,6 +112,30 @@ body.magazine main > .section > div > h3 {
   display: table;
 }
 
+/* FAQ page: two columns — accordion left, "Need more help?" right */
+@media (width >= 900px) {
+  body.faqs main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    column-gap: 48px;
+    align-items: start;
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  body.faqs main > .section > div {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* the trailing "Need more help?" section is the right column */
+  body.faqs main > .section:last-of-type {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
 p,
 dl,
 ol,
@@ -371,4 +395,11 @@ body.adventure main > .section:first-of-type h1 + h4 {
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+/* FAQ page title gets the yellow underline accent */
+body.faqs main > .section:first-of-type h1 {
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--brand-primary);
+  display: table;
 }

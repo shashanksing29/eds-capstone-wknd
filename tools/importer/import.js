@@ -131,6 +131,8 @@ function buildMetadata(document, url, main, WebImporter) {
     meta.Template = 'adventure-listing';
   } else if (path.endsWith('/magazine') || path.endsWith('/magazine.html')) {
     meta.Template = 'magazine';
+  } else if (path.endsWith('/faqs') || path.endsWith('/faqs.html')) {
+    meta.Template = 'faqs';
   } else if (path === '/us/en' || path === '/us/en.html' || path === '/us/en/' || mainstreamPath(path) === '/') {
     meta.Template = 'home';
   }
@@ -585,13 +587,18 @@ export default {
       appended.push(table);
     }
 
-    // FAQ page → convert the Q&A accordion into an Accordion block in place.
+    // FAQ page → convert the Q&A accordion into an Accordion block, and split
+    // "Need more help?" into its own section so it can sit in a right column.
     if (path.endsWith('/faqs') || path.endsWith('/faqs.html')) {
       const acc = main.querySelector('.cmp-accordion, [data-cmp-is="accordion"]');
       if (acc) {
         const table = buildFaqAccordion(document, main, WebImporter);
         if (table) acc.replaceWith(table); else acc.remove();
       }
+      // section break before "Need more help?" → second (right) column
+      const help = [...main.querySelectorAll('h2, h3')]
+        .find((h) => /need more help/i.test(h.textContent));
+      if (help) help.before(document.createElement('hr'));
     }
 
     // Metadata block (also used to feed the query index)
