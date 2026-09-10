@@ -108,6 +108,8 @@ var CustomImportScript = (() => {
       meta.Template = "adventure-listing";
     } else if (path.endsWith("/magazine") || path.endsWith("/magazine.html")) {
       meta.Template = "magazine";
+    } else if (path.endsWith("/faqs") || path.endsWith("/faqs.html")) {
+      meta.Template = "faqs";
     } else if (path === "/us/en" || path === "/us/en.html" || path === "/us/en/" || mainstreamPath(path) === "/") {
       meta.Template = "home";
     }
@@ -476,6 +478,8 @@ var CustomImportScript = (() => {
           if (table) acc.replaceWith(table);
           else acc.remove();
         }
+        const help = [...main.querySelectorAll("h2, h3")].find((h) => /need more help/i.test(h.textContent));
+        if (help) help.before(document.createElement("hr"));
       }
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);
