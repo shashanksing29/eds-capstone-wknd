@@ -403,10 +403,16 @@ var CustomImportScript = (() => {
         if (section) break;
         node = node.parentElement;
       }
+      const socials = [...xf.querySelectorAll("a[href]")].map((a) => {
+        const label = (a.getAttribute("aria-label") || a.getAttribute("title") || "").trim();
+        const platform = (label.split(/\s+/)[0] || "").toLowerCase();
+        return { platform, href: a.getAttribute("href") || "#" };
+      }).filter((s) => /facebook|twitter|instagram/.test(s.platform));
       all.push({
         name,
         role: role || "",
         img: absSrc(imgEl, base),
+        socials,
         section: /guide/i.test(section) ? "guides" : "contributors"
       });
     });
@@ -418,23 +424,40 @@ var CustomImportScript = (() => {
   function buildProfileCardsTable(document, people) {
     if (!people.length) return null;
     const rows = [["Cards (profile)"]];
-    people.forEach(({ name, role, img }) => {
-      const cell = document.createElement("div");
+    people.forEach(({
+      name,
+      role,
+      img,
+      socials
+    }) => {
+      const imgCell = document.createElement("div");
       const im = document.createElement("img");
       im.src = img;
       im.alt = name;
-      cell.append(im);
+      imgCell.append(im);
+      const body = document.createElement("div");
       const nameP = document.createElement("p");
       const strong = document.createElement("strong");
       strong.textContent = name;
       nameP.append(strong);
-      cell.append(nameP);
+      body.append(nameP);
       if (role) {
         const roleP = document.createElement("p");
         roleP.textContent = role;
-        cell.append(roleP);
+        body.append(roleP);
       }
-      rows.push([cell]);
+      if (socials && socials.length) {
+        const sp = document.createElement("p");
+        socials.forEach((s) => {
+          const a = document.createElement("a");
+          a.href = s.href;
+          a.textContent = s.platform;
+          a.setAttribute("data-social", s.platform);
+          sp.append(a);
+        });
+        body.append(sp);
+      }
+      rows.push([imgCell, body]);
     });
     return rows;
   }
