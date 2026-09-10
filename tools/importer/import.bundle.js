@@ -347,6 +347,12 @@ var CustomImportScript = (() => {
       }
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
         const rows = buildAdventureCards(document, main, url);
+        main.querySelectorAll("ol").forEach((ol) => {
+          if (/climbing|cycling|skiing|surfing|travel/i.test(ol.textContent)) ol.remove();
+        });
+        main.querySelectorAll("ul").forEach((ul) => {
+          if (ul.querySelector('a[href*="/adventures/"], article')) ul.remove();
+        });
         if (rows) {
           const table = WebImporter.DOMUtils.createTable(rows, document);
           appended.push(table);
