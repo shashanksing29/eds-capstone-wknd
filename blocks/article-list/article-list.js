@@ -56,7 +56,7 @@ function matches(row, cfg) {
  * Format an indexed date value into "Thursday, 9 Jul 2020". Accepts either a
  * UNIX-seconds timestamp or an ISO yyyy-mm-dd string. Returns '' when unset.
  */
-function formatDate(value, opts) {
+function formatDate(value, opts, locale = 'en-US') {
   if (!value) return '';
   let d;
   if (/^\d+$/.test(String(value).trim())) {
@@ -67,7 +67,7 @@ function formatDate(value, opts) {
     d = new Date(`${value}T00:00:00Z`);
   }
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('en-US', { timeZone: 'UTC', ...opts });
+  return d.toLocaleDateString(locale, { timeZone: 'UTC', ...opts });
 }
 
 /** Build a compact sidebar row (title + date, no image). */
@@ -82,9 +82,10 @@ function buildCompactCard(article) {
   title.textContent = article.title || article.path;
   link.append(title);
 
+  // day-before-month order ("Thursday, 9 Jul 2020") via en-GB, matching WKND
   const dateStr = formatDate(article.date, {
     weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
-  });
+  }, 'en-GB');
   if (dateStr) {
     const date = document.createElement('span');
     date.className = 'article-list-compact-date';
