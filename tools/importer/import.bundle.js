@@ -370,6 +370,7 @@ var CustomImportScript = (() => {
           if (ul.querySelector("a")) ul.remove();
         });
         main.querySelectorAll("h2, h3, p, hr").forEach((el) => {
+          if (el.closest("table")) return;
           const t = el.textContent.trim().toLowerCase();
           if (["all articles", "members only", "featured article"].includes(t)) el.remove();
           if (/^sign in to un-?lock/i.test(el.textContent.trim())) el.remove();

@@ -467,6 +467,9 @@ export default {
         if (ul.querySelector('a')) ul.remove();
       });
       main.querySelectorAll('h2, h3, p, hr').forEach((el) => {
+        // don't touch content already moved into a generated block table
+        // (the featured columns table contains the "Featured Article" eyebrow).
+        if (el.closest('table')) return;
         const t = el.textContent.trim().toLowerCase();
         if (['all articles', 'members only', 'featured article'].includes(t)) el.remove();
         if (/^sign in to un-?lock/i.test(el.textContent.trim())) el.remove();
