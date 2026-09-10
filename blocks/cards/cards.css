@@ -112,3 +112,46 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/*
+ * Profile variant (About Us contributors / guides): round centered photos,
+ * centered name + uppercase role.
+ */
+.cards.profile > ul > li {
+  text-align: center;
+}
+
+.cards.profile .cards-card-image {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+.cards.profile .cards-card-image img {
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+}
+
+.cards.profile .cards-card-body {
+  text-align: center;
+}
+
+.cards.profile .cards-card-body p:first-child {
+  margin: 0 0 4px;
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-l);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.cards.profile .cards-card-body p:first-child strong {
+  font-weight: 400;
+}
+
+/* role line — keep uppercase gray but allow wrapping (not truncated) */
+.cards.profile .cards-card-body p:not(:first-child) {
+  white-space: normal;
+  overflow: visible;
+}
