@@ -676,19 +676,18 @@ export default {
     // About Us → rebuild the contributor/guide profile-card grids (captured
     // before stripChrome) and insert each after its section heading + intro.
     if (isAbout && profiles) {
-      const insertAfterHeading = (matcher, people) => {
+      const insertAfterHeading = (matcher, introRe, people) => {
         const heading = [...main.querySelectorAll('h2')].find((h) => matcher.test(h.textContent));
         const rows = buildProfileCardsTable(document, people);
         if (!heading || !rows) return;
         const table = WebImporter.DOMUtils.createTable(rows, document);
-        // insert after the intro paragraph that follows the heading, if present
-        let anchor = heading;
-        const next = heading.nextElementSibling;
-        if (next && next.tagName === 'P') anchor = next;
-        anchor.after(table);
+        // anchor after the section's intro paragraph (heading → intro → cards);
+        // matched by text since heading/intro aren't siblings in the source DOM.
+        const intro = [...main.querySelectorAll('p')].find((p) => introRe.test(p.textContent));
+        (intro || heading).after(table);
       };
-      insertAfterHeading(/our contributors/i, profiles.contributors);
-      insertAfterHeading(/wknd guides/i, profiles.guides);
+      insertAfterHeading(/our contributors/i, /most compelling stories/i, profiles.contributors);
+      insertAfterHeading(/wknd guides/i, /extraordinary travel guides/i, profiles.guides);
     }
 
     // Metadata block (also used to feed the query index)

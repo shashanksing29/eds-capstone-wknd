@@ -545,18 +545,16 @@ var CustomImportScript = (() => {
         if (help) help.before(document.createElement("hr"));
       }
       if (isAbout && profiles) {
-        const insertAfterHeading = (matcher, people) => {
+        const insertAfterHeading = (matcher, introRe, people) => {
           const heading = [...main.querySelectorAll("h2")].find((h) => matcher.test(h.textContent));
           const rows = buildProfileCardsTable(document, people);
           if (!heading || !rows) return;
           const table = WebImporter.DOMUtils.createTable(rows, document);
-          let anchor = heading;
-          const next = heading.nextElementSibling;
-          if (next && next.tagName === "P") anchor = next;
-          anchor.after(table);
+          const intro = [...main.querySelectorAll("p")].find((p) => introRe.test(p.textContent));
+          (intro || heading).after(table);
         };
-        insertAfterHeading(/our contributors/i, profiles.contributors);
-        insertAfterHeading(/wknd guides/i, profiles.guides);
+        insertAfterHeading(/our contributors/i, /most compelling stories/i, profiles.contributors);
+        insertAfterHeading(/wknd guides/i, /extraordinary travel guides/i, profiles.guides);
       }
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);
