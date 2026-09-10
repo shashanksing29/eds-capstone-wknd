@@ -52,6 +52,24 @@ function matches(row, cfg) {
   return true;
 }
 
+/**
+ * Format an indexed date value into "Thursday, 9 Jul 2020". Accepts either a
+ * UNIX-seconds timestamp or an ISO yyyy-mm-dd string. Returns '' when unset.
+ */
+function formatDate(value, opts) {
+  if (!value) return '';
+  let d;
+  if (/^\d+$/.test(String(value).trim())) {
+    const ts = parseInt(value, 10);
+    if (Number.isNaN(ts) || ts <= 0) return '';
+    d = new Date(ts * 1000);
+  } else {
+    d = new Date(`${value}T00:00:00Z`);
+  }
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', { timeZone: 'UTC', ...opts });
+}
+
 /** Build a compact sidebar row (title + date, no image). */
 function buildCompactCard(article) {
   const li = document.createElement('li');
@@ -64,17 +82,14 @@ function buildCompactCard(article) {
   title.textContent = article.title || article.path;
   link.append(title);
 
-  if (article.date) {
-    const ts = parseInt(article.date, 10);
-    if (!Number.isNaN(ts) && ts > 0) {
-      const d = new Date(ts * 1000);
-      const date = document.createElement('span');
-      date.className = 'article-list-compact-date';
-      date.textContent = d.toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
-      });
-      link.append(date);
-    }
+  const dateStr = formatDate(article.date, {
+    weekday: 'long', year: 'numeric', month: 'short', day: 'numeric',
+  });
+  if (dateStr) {
+    const date = document.createElement('span');
+    date.className = 'article-list-compact-date';
+    date.textContent = dateStr;
+    link.append(date);
   }
   li.append(link);
   return li;
@@ -126,13 +141,8 @@ function buildCard(article) {
 
   const meta = [];
   if (article.author) meta.push(article.author);
-  if (article.date) {
-    const ts = parseInt(article.date, 10);
-    if (!Number.isNaN(ts) && ts > 0) {
-      const d = new Date(ts * 1000);
-      meta.push(d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
-    }
-  }
+  const dateStr = formatDate(article.date, { year: 'numeric', month: 'long', day: 'numeric' });
+  if (dateStr) meta.push(dateStr);
   if (meta.length) {
     const byline = document.createElement('p');
     byline.className = 'article-list-card-meta';

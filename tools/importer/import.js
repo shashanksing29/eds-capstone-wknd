@@ -124,6 +124,18 @@ function buildMetadata(document, url, main, WebImporter) {
       .map((e) => e.textContent.trim())
       .find((t) => /^By\s+.+/i.test(t) && t.length < 60);
     if (byline) meta.Author = byline.replace(/^By\s+/i, '').trim();
+    // Publication date (as ISO yyyy-mm-dd) — WKND doesn't expose it in per-page
+    // meta, so map it by slug from the values shown in the site's "Share this
+    // story" sidebars. Feeds the query-index `date` column.
+    const slug = mainstreamPath(path).split('/').pop();
+    const dates = {
+      'arctic-surfing': '2020-07-09',
+      'san-diego-surf': '2020-07-09',
+      'western-australia': '2020-07-09',
+      'guide-la-skateparks': '2020-09-30',
+      'ski-touring': '2020-09-30',
+    };
+    if (dates[slug]) meta['Publication Date'] = dates[slug];
   } else if (path.includes('/adventures/') && !path.endsWith('/adventures')) {
     meta.Template = 'adventure';
     meta.Category = 'Adventures';
