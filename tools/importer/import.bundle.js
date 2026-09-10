@@ -352,6 +352,29 @@ var CustomImportScript = (() => {
     }
     return WebImporter2.DOMUtils.createTable([["Hero"], [imgCell], [content]], document);
   }
+  function buildFaqAccordion(document, root, WebImporter2) {
+    const acc = root.querySelector('.cmp-accordion, [data-cmp-is="accordion"]');
+    if (!acc) return null;
+    const items = [...acc.querySelectorAll(".cmp-accordion__item")];
+    if (items.length === 0) return null;
+    const rows = [["Accordion"]];
+    items.forEach((item) => {
+      var _a, _b;
+      const q = (_b = (_a = item.querySelector(".cmp-accordion__title, .cmp-accordion__header, button")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+      const panel = item.querySelector(".cmp-accordion__panel");
+      if (!q) return;
+      const qCell = document.createElement("div");
+      const qp = document.createElement("p");
+      qp.textContent = q;
+      qCell.append(qp);
+      const aCell = document.createElement("div");
+      if (panel) {
+        [...panel.childNodes].forEach((n) => aCell.append(n.cloneNode(true)));
+      }
+      rows.push([qCell, aCell]);
+    });
+    return rows.length > 1 ? WebImporter2.DOMUtils.createTable(rows, document) : null;
+  }
   var import_default = {
     transformDOM: ({ document, url }) => {
       const main = pickMain(document);
@@ -445,6 +468,14 @@ var CustomImportScript = (() => {
         ];
         const table = WebImporter.DOMUtils.createTable(rows, document);
         appended.push(table);
+      }
+      if (path.endsWith("/faqs") || path.endsWith("/faqs.html")) {
+        const acc = main.querySelector('.cmp-accordion, [data-cmp-is="accordion"]');
+        if (acc) {
+          const table = buildFaqAccordion(document, main, WebImporter);
+          if (table) acc.replaceWith(table);
+          else acc.remove();
+        }
       }
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);

@@ -417,6 +417,35 @@ function buildFeatureHero(document, teaser, base, WebImporter) {
   return WebImporter.DOMUtils.createTable([['Hero'], [imgCell], [content]], document);
 }
 
+/**
+ * Convert the WKND FAQ accordion (.cmp-accordion) into an Accordion block:
+ * one row per item, [question, answer]. Returns a table element or null.
+ */
+function buildFaqAccordion(document, root, WebImporter) {
+  const acc = root.querySelector('.cmp-accordion, [data-cmp-is="accordion"]');
+  if (!acc) return null;
+  const items = [...acc.querySelectorAll('.cmp-accordion__item')];
+  if (items.length === 0) return null;
+
+  const rows = [['Accordion']];
+  items.forEach((item) => {
+    const q = item.querySelector('.cmp-accordion__title, .cmp-accordion__header, button')?.textContent?.trim();
+    const panel = item.querySelector('.cmp-accordion__panel');
+    if (!q) return;
+    const qCell = document.createElement('div');
+    const qp = document.createElement('p');
+    qp.textContent = q;
+    qCell.append(qp);
+    const aCell = document.createElement('div');
+    if (panel) {
+      // keep the panel's inner content (paragraphs/links)
+      [...panel.childNodes].forEach((n) => aCell.append(n.cloneNode(true)));
+    }
+    rows.push([qCell, aCell]);
+  });
+  return rows.length > 1 ? WebImporter.DOMUtils.createTable(rows, document) : null;
+}
+
 export default {
   transformDOM: ({ document, url }) => {
     /* global WebImporter */
@@ -554,6 +583,15 @@ export default {
       ];
       const table = WebImporter.DOMUtils.createTable(rows, document);
       appended.push(table);
+    }
+
+    // FAQ page → convert the Q&A accordion into an Accordion block in place.
+    if (path.endsWith('/faqs') || path.endsWith('/faqs.html')) {
+      const acc = main.querySelector('.cmp-accordion, [data-cmp-is="accordion"]');
+      if (acc) {
+        const table = buildFaqAccordion(document, main, WebImporter);
+        if (table) acc.replaceWith(table); else acc.remove();
+      }
     }
 
     // Metadata block (also used to feed the query index)
