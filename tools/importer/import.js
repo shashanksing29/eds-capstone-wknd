@@ -139,34 +139,70 @@ function buildMetadata(document, url, main, WebImporter) {
   return block;
 }
 
-/** Build a Cards block from adventure teaser links (listing page). */
+/**
+ * Map each adventure to its filter categories, derived from the WKND
+ * "Current Adventures" tab panels. Keyed by adventure slug.
+ */
+function adventureCategoryMap(document) {
+  const map = {};
+  const tabs = [...document.querySelectorAll('[role="tab"]')].map((t) => t.textContent.trim());
+  const panels = [...document.querySelectorAll('[role="tabpanel"]')];
+  panels.forEach((panel, i) => {
+    const cat = tabs[i];
+    if (!cat || /^all$/i.test(cat)) return;
+    panel.querySelectorAll('a[href*="/adventures/"]').forEach((a) => {
+      const slug = (a.getAttribute('href') || '').match(/adventures\/([a-z0-9-]+)/)?.[1];
+      if (!slug) return;
+      (map[slug] = map[slug] || new Set()).add(cat);
+    });
+  });
+  return map;
+}
+
+/**
+ * Build a Cards block from adventure teaser links (listing page). Each card
+ * carries an image, title link, description, and a categories marker
+ * (`categories: Surfing`) that cards.js reads to power the filter tabs.
+ */
 function buildAdventureCards(document, main, url) {
   const base = new URL(url);
+  const catMap = adventureCategoryMap(document);
   const seen = new Set();
   const cards = [];
-  main.querySelectorAll('a[href]').forEach((a) => {
+  main.querySelectorAll('article').forEach((art) => {
+    const a = art.querySelector('a[href*="/adventures/"]');
+    if (!a) return;
     const href = a.getAttribute('href') || '';
     if (!/\/adventures\/[a-z0-9-]+(\.html)?$/i.test(href)) return;
+    const slug = href.match(/adventures\/([a-z0-9-]+)/)?.[1] || '';
     const key = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
     if (seen.has(key)) return;
-    // find an image + label for this card
-    const scope = a.closest('li, article, .cmp-teaser, div') || a;
-    const img = scope.querySelector('img');
-    const label = (a.textContent.trim()
-      || scope.querySelector('.cmp-teaser__title, h2, h3')?.textContent?.trim()
-      || key.split('/').pop().replace(/-/g, ' '));
+    const img = art.querySelector('img');
+    const label = [...art.querySelectorAll('a')].map((x) => x.textContent.trim()).find(Boolean)
+      || key.split('/').pop().replace(/-/g, ' ');
+    // description = longest text not inside a link
+    let desc = '';
+    art.querySelectorAll('p, div, span').forEach((n) => {
+      const t = n.textContent.trim();
+      if (t && !n.querySelector('a, img') && t !== label && t.length > desc.length) desc = t;
+    });
     if (!img && !label) return;
     seen.add(key);
-    cards.push({ href: key, img, label });
+    cards.push({
+      href: key, img, label, desc, cats: [...(catMap[slug] || [])],
+    });
   });
   if (cards.length === 0) return null;
 
   const rows = [['Cards']];
-  cards.forEach(({ href, img, label }) => {
+  cards.forEach(({
+    href, img, label, desc, cats,
+  }) => {
     const cell = document.createElement('div');
     if (img) {
       const im = document.createElement('img');
       im.src = /^https?:/.test(img.src) ? img.src : new URL(img.getAttribute('src'), base).href;
+      im.alt = label;
       cell.append(im);
     }
     const p = document.createElement('p');
@@ -175,6 +211,16 @@ function buildAdventureCards(document, main, url) {
     link.textContent = label;
     p.append(link);
     cell.append(p);
+    if (desc) {
+      const dp = document.createElement('p');
+      dp.textContent = desc;
+      cell.append(dp);
+    }
+    if (cats.length) {
+      const cp = document.createElement('p');
+      cp.textContent = `categories: ${cats.join(', ')}`;
+      cell.append(cp);
+    }
     rows.push([cell]);
   });
   return rows;
