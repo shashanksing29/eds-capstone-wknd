@@ -51,7 +51,7 @@ var CustomImportScript = (() => {
       });
       container.append(navUl);
       container.append(document.createElement("hr"));
-      const h = document.createElement("h4");
+      const h = document.createElement("h2");
       h.textContent = "Follow Us";
       container.append(h);
       const socialUl = document.createElement("ul");

@@ -88,7 +88,7 @@ footer .footer > div > div:nth-child(3) {
   gap: 16px;
 }
 
-footer .footer h4 {
+footer .footer h2 {
   margin: 0;
   color: var(--text-color-inverse);
   font-family: var(--body-font-family);
