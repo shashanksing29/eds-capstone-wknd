@@ -139,6 +139,14 @@ export default async function decorate(block) {
 
   const navSections = nav.querySelector('.nav-sections');
   if (navSections) {
+    // highlight the nav link for the current top-level page (WKND yellow chip)
+    const current = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+    navSections.querySelectorAll(':scope a[href]').forEach((a) => {
+      const href = a.getAttribute('href').replace(/\/$/, '') || '/';
+      if (href !== '/' && (current === href || current.startsWith(`${href}/`))) {
+        a.setAttribute('aria-current', 'page');
+      }
+    });
     navSections.querySelectorAll(':scope .default-content-wrapper > ul > li').forEach((navSection) => {
       if (navSection.querySelector('ul')) navSection.classList.add('nav-drop');
       navSection.addEventListener('click', () => {
