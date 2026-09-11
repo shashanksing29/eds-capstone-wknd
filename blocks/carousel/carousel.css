@@ -129,24 +129,36 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 8px;
+  bottom: 2px;
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 2px;
   z-index: 2;
 }
 
+/* 24px tap target (a11y), with a 10px visual dot drawn via ::before */
 .carousel.block .carousel-dot {
-  width: 10px;
-  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  border: 1px solid var(--text-color);
-  border-radius: 50%;
+  border: 0;
   background: transparent;
   cursor: pointer;
 }
 
-.carousel.block .carousel-dot[aria-selected="true"] {
+.carousel.block .carousel-dot::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--text-color);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.carousel.block .carousel-dot[aria-selected="true"]::before {
   background: var(--text-color);
 }
 

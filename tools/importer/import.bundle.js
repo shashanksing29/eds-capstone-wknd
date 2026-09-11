@@ -735,6 +735,13 @@ var CustomImportScript = (() => {
       }
       if (isArticle) {
         const h1el = main.querySelector("h1");
+        const bylineH = [...main.querySelectorAll("h2, h3, h4, h5, h6")].find((h) => /^By\s+.+/i.test(h.textContent.trim()) && h.textContent.trim().length < 60);
+        if (bylineH) {
+          const p = document.createElement("p");
+          p.className = "byline";
+          p.textContent = bylineH.textContent.trim();
+          bylineH.replaceWith(p);
+        }
         if (h1el) {
           const slug = mainstreamPath(path).split("/").pop() || "";
           const pageName = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
