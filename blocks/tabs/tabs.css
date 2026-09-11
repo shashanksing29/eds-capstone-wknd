@@ -3,13 +3,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin: 0 0 28px;
+
+  /* nudge the tab bar up so it aligns with the title baseline (WKND) */
+  margin: -8px 0 28px;
 }
 
 .tabs .tabs-tab {
-  padding: 12px 22px;
+  padding: 10px 16px;
   border: 0;
-  background: var(--light-color, #ebebeb);
+  background: transparent;
   color: var(--text-color);
   font-family: var(--body-font-family);
   font-size: 13px;
@@ -19,8 +21,16 @@
   cursor: pointer;
 }
 
+.tabs .tabs-tab:hover {
+  color: var(--brand-primary);
+}
+
 .tabs .tabs-tab[aria-selected="true"] {
   background: var(--text-color);
+  color: var(--background-color);
+}
+
+.tabs .tabs-tab[aria-selected="true"]:hover {
   color: var(--background-color);
 }
 
