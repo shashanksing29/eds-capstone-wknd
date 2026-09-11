@@ -511,10 +511,15 @@ body.adventure main > .section:nth-of-type(2) h1 {
   text-align: left;
 }
 
-/* "Share this Adventure" heading under the details sidebar */
-body.adventure main > .section:nth-of-type(3) h5 {
+/* "Share this Adventure" heading under the details sidebar (h2, styled small) */
+/* stylelint-disable-next-line no-descending-specificity */
+body.adventure main > .section:nth-of-type(3) h2 {
   margin: 24px 0 0;
+  padding: 0;
+  border: 0;
+  display: block;
   color: var(--muted-color);
+  font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   font-weight: 700;
   text-transform: uppercase;

@@ -791,7 +791,7 @@ var CustomImportScript = (() => {
         main.append(document.createElement("hr"));
         const detailRows = buildAdventureDetails(document, adventure.details);
         if (detailRows) main.append(WebImporter.DOMUtils.createTable(detailRows, document));
-        const shareH = document.createElement("h5");
+        const shareH = document.createElement("h2");
         shareH.textContent = "Share this Adventure";
         main.append(shareH);
         main.append(document.createElement("hr"));
