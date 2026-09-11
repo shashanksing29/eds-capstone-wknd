@@ -759,7 +759,7 @@ var CustomImportScript = (() => {
         const bioRows = buildAuthorBioTable(document, byline);
         if (bioRows) appended.push(WebImporter.DOMUtils.createTable(bioRows, document));
         appended.push(document.createElement("hr"));
-        const shareHeading = document.createElement("h5");
+        const shareHeading = document.createElement("h2");
         shareHeading.textContent = "Share this Story";
         appended.push(shareHeading);
         const listRows = [

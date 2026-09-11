@@ -960,8 +960,9 @@ export default {
       if (bioRows) appended.push(WebImporter.DOMUtils.createTable(bioRows, document));
 
       // Sidebar section: "Share this story" + dynamic list of other articles.
+      // h2 (not h5) to keep heading order sequential; styled small via CSS.
       appended.push(document.createElement('hr'));
-      const shareHeading = document.createElement('h5');
+      const shareHeading = document.createElement('h2');
       shareHeading.textContent = 'Share this Story';
       appended.push(shareHeading);
       const listRows = [
