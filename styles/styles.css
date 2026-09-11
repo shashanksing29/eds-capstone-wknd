@@ -428,10 +428,15 @@ body.article main > .section:nth-of-type(2) .default-content-wrapper h2 {
   font-size: var(--heading-font-size-l);
 }
 
-/* the "Share this story" sidebar heading */
-body.article main > .section:last-of-type h5 {
+/* the "Share this story" sidebar heading (h2, styled small) */
+/* stylelint-disable-next-line no-descending-specificity */
+body.article main > .section:last-of-type h2 {
   margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  display: block;
   color: var(--muted-color);
+  font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
