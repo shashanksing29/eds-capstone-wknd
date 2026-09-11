@@ -3,6 +3,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+
   /* nudge the tab bar up so it aligns with the title baseline (WKND) */
   margin: -8px 0 28px;
 }
