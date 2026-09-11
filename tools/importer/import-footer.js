@@ -41,8 +41,9 @@ export default {
 
     container.append(document.createElement('hr'));
 
-    // Column 3: Follow Us + social
-    const h = document.createElement('h4');
+    // Column 3: Follow Us + social. h2 (styled small) keeps heading order
+    // sequential on pages whose deepest heading is an h2 (e.g. articles).
+    const h = document.createElement('h2');
     h.textContent = 'Follow Us';
     container.append(h);
     const socialUl = document.createElement('ul');
