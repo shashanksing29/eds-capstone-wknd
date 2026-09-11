@@ -1,0 +1,77 @@
+/* WKND adventure tabs — dark active tab, light inactive tabs */
+.tabs .tabs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 28px;
+}
+
+.tabs .tabs-tab {
+  padding: 12px 22px;
+  border: 0;
+  background: var(--light-color, #ebebeb);
+  color: var(--text-color);
+  font-family: var(--body-font-family);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.tabs .tabs-tab[aria-selected="true"] {
+  background: var(--text-color);
+  color: var(--background-color);
+}
+
+.tabs .tabs-panel {
+  margin: 0;
+}
+
+/* Overview intro heading — large serif, matching WKND */
+.tabs .tabs-panel h2 {
+  margin: 0 0 24px;
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-xl);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.tabs .tabs-panel h2 strong {
+  font-weight: 400;
+}
+
+.tabs .tabs-panel p {
+  margin: 0 0 24px;
+  font-size: var(--body-font-size-m);
+  line-height: 1.6;
+}
+
+.tabs .tabs-panel p:has(img),
+.tabs .tabs-panel p:has(picture) {
+  line-height: 0;
+}
+
+.tabs .tabs-panel img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* itinerary day headings */
+.tabs .tabs-panel h3 {
+  margin: 8px 0 16px;
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-l);
+  font-weight: 400;
+}
+
+/* related trips list */
+.tabs .tabs-panel ul {
+  margin: 0 0 24px;
+  padding-left: 20px;
+}
+
+.tabs .tabs-panel ul li {
+  margin: 4px 0;
+}
