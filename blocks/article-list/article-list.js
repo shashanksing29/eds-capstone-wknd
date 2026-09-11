@@ -104,14 +104,16 @@ function buildCard(article) {
 
   const link = document.createElement('a');
   link.href = article.path;
-  link.setAttribute('aria-label', article.title || article.path);
+  // No aria-label: the visible title (h3) is the accessible name, so it matches
+  // the visible text (WCAG 2.5.3) and stays descriptive for the link-text audit.
 
   if (article.image) {
     const imgWrap = document.createElement('div');
     imgWrap.className = 'article-list-card-image';
+    // Decorative here — the title is repeated as visible text in the card body.
     const picture = createOptimizedPicture(
       article.image,
-      article.title || '',
+      '',
       false,
       [{ width: '750' }],
     );

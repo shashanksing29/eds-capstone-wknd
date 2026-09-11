@@ -40,12 +40,13 @@ function buildCard(item) {
   li.className = 'search-result';
   const link = document.createElement('a');
   link.href = item.path;
-  link.setAttribute('aria-label', item.title || item.path);
+  // No aria-label: the visible title (h3) is the accessible name (WCAG 2.5.3).
 
   if (item.image) {
     const imgWrap = document.createElement('div');
     imgWrap.className = 'search-result-image';
-    imgWrap.append(createOptimizedPicture(item.image, item.title || '', false, [{ width: '750' }]));
+    // Decorative — the title is shown as visible text below.
+    imgWrap.append(createOptimizedPicture(item.image, '', false, [{ width: '750' }]));
     link.append(imgWrap);
   }
 

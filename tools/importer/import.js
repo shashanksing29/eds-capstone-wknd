@@ -1006,7 +1006,8 @@ export default {
       // 3) details sidebar + "Share this Adventure"
       const detailRows = buildAdventureDetails(document, adventure.details);
       if (detailRows) main.append(WebImporter.DOMUtils.createTable(detailRows, document));
-      const shareH = document.createElement('h5');
+      // h2 (styled small) keeps heading order sequential (title h1 → h2).
+      const shareH = document.createElement('h2');
       shareH.textContent = 'Share this Adventure';
       main.append(shareH);
       main.append(document.createElement('hr'));
