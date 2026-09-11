@@ -626,6 +626,114 @@ function buildAuthorBioTable(document, byline) {
   return [['Author Bio'], [imgCell, body]];
 }
 
+/**
+ * Capture the adventure detail's structured pieces BEFORE stripChrome removes
+ * the content-fragment / carousel wrappers:
+ *   - carousel image srcs (the 3 hero slides)
+ *   - details pairs (Activity, Adventure Type, Trip Length, …) from the <dl>
+ *   - the 3 tab panels (Overview / Itinerary / What to Bring) as cloned nodes
+ * Returns null when the page isn't an adventure detail.
+ */
+function extractAdventure(document, base) {
+  const dl = document.querySelector('dl.cmp-contentfragment__elements, dl');
+  if (!dl) return null;
+
+  const heroImgs = [...document.querySelectorAll('.cmp-carousel__item img')]
+    .map((img) => absSrc(img, base));
+
+  const details = [...dl.querySelectorAll('.cmp-contentfragment__element, div')]
+    .map((el) => {
+      const dt = el.querySelector('dt');
+      const dd = el.querySelector('dd');
+      if (!dt || !dd) return null;
+      return { label: dt.textContent.trim(), value: dd.textContent.trim() };
+    })
+    .filter(Boolean);
+
+  const tablist = [...document.querySelectorAll('[role="tablist"]')]
+    .find((t) => [...t.querySelectorAll('[role="tab"]')].some((x) => /overview/i.test(x.textContent)));
+  const tabs = [];
+  if (tablist) {
+    [...tablist.querySelectorAll('[role="tab"]')].forEach((tab) => {
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      if (panel) tabs.push({ label: tab.textContent.trim(), panel: panel.cloneNode(true) });
+    });
+  }
+
+  return { heroImgs, details, tabs };
+}
+
+/** Build a Carousel table (image-only slides) from a list of image srcs. */
+function buildAdventureCarousel(document, imgs) {
+  if (!imgs.length) return null;
+  const rows = [['Carousel']];
+  imgs.forEach((src) => {
+    const cell = document.createElement('div');
+    const im = document.createElement('img');
+    im.src = src;
+    cell.append(im);
+    rows.push([cell]);
+  });
+  return rows;
+}
+
+/** Build the adventure details sidebar as an "Adventure Details" block. */
+function buildAdventureDetails(document, details) {
+  if (!details.length) return null;
+  const rows = [['Adventure Details']];
+  details.forEach(({ label, value }) => {
+    const labelCell = document.createElement('div');
+    const lp = document.createElement('p');
+    lp.textContent = label;
+    labelCell.append(lp);
+    const valueCell = document.createElement('div');
+    const vp = document.createElement('p');
+    const strong = document.createElement('strong');
+    strong.textContent = value;
+    vp.append(strong);
+    valueCell.append(vp);
+    rows.push([labelCell, valueCell]);
+  });
+  return rows;
+}
+
+/**
+ * Build a Tabs block from the adventure's Overview / Itinerary / What to Bring
+ * panels. Each row is [label, panel-content]; tabs.js renders the tab bar.
+ * Absolutizes images and drops the duplicated content-fragment title (h3/h1)
+ * that leaks into each panel.
+ */
+function buildAdventureTabs(document, tabs, base, title) {
+  if (!tabs.length) return null;
+  const rows = [['Tabs']];
+  tabs.forEach(({ label, panel }) => {
+    const content = document.createElement('div');
+    // pull the article body out of the content-fragment wrapper
+    const source = panel.querySelector('.cmp-contentfragment__content, article') || panel;
+    [...source.children].forEach((child) => content.append(child.cloneNode(true)));
+
+    // absolutize images
+    content.querySelectorAll('img').forEach((img) => {
+      const src = img.getAttribute('src');
+      if (src && !/^https?:/i.test(src) && !src.startsWith('data:')) {
+        try { img.src = new URL(src, base).href; } catch (e) { /* leave */ }
+      }
+    });
+    // drop the repeated fragment title (matches the page H1) and empty nodes
+    content.querySelectorAll('h1, h2, h3').forEach((h) => {
+      if (title && h.textContent.trim().toLowerCase() === title.toLowerCase()) h.remove();
+    });
+    content.querySelectorAll('p').forEach((p) => {
+      if (!p.textContent.trim() && !p.querySelector('img, picture')) p.remove();
+    });
+
+    const labelCell = document.createElement('div');
+    labelCell.textContent = label;
+    rows.push([labelCell, content]);
+  });
+  return rows;
+}
+
 export default {
   transformDOM: ({ document, url }) => {
     /* global WebImporter */
@@ -641,6 +749,11 @@ export default {
     // its experience-fragment wrapper.
     const isArticle = path.includes('/magazine/') && !path.endsWith('/magazine') && !path.endsWith('/magazine.html');
     const byline = isArticle ? extractArticleByline(document, new URL(url)) : null;
+
+    // Adventure detail: capture carousel/details/tabs BEFORE stripChrome removes
+    // the content-fragment + carousel wrappers.
+    const isAdventure = path.includes('/adventures/') && !path.endsWith('/adventures') && !path.endsWith('/adventures.html');
+    const adventure = isAdventure ? extractAdventure(document, new URL(url)) : null;
 
     stripChrome(main, WebImporter);
     absolutizeImages(main, url);
@@ -845,6 +958,52 @@ export default {
         ['template', 'article'],
       ];
       appended.push(WebImporter.DOMUtils.createTable(listRows, document));
+    }
+
+    // Adventure detail → rebuild from the captured pieces: a full-width Carousel
+    // hero, a breadcrumb eyebrow + title, then a two-column body (details
+    // sidebar + "Share this Adventure" left, Overview/Itinerary/What to Bring
+    // tabs right). The source markup is dropped entirely and replaced.
+    if (isAdventure && adventure) {
+      const base = new URL(url);
+      const title = (main.querySelector('h1')?.textContent || '').trim();
+      // Clear the messy source body; rebuild deterministically.
+      main.textContent = '';
+
+      // 1) full-width carousel hero section
+      const carRows = buildAdventureCarousel(document, adventure.heroImgs);
+      if (carRows) main.append(WebImporter.DOMUtils.createTable(carRows, document));
+      main.append(document.createElement('hr'));
+
+      // 2) title section: breadcrumb eyebrow + H1
+      const slug = mainstreamPath(path).split('/').pop() || '';
+      const pageName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const eyebrow = document.createElement('p');
+      const advLink = document.createElement('a');
+      advLink.href = '/adventures';
+      advLink.textContent = 'Adventures';
+      eyebrow.append(advLink);
+      eyebrow.append(document.createTextNode(` / ${pageName}`));
+      main.append(eyebrow);
+      const h1new = document.createElement('h1');
+      h1new.textContent = title || pageName;
+      main.append(h1new);
+      main.append(document.createElement('hr'));
+
+      // 3) details sidebar + "Share this Adventure"
+      const detailRows = buildAdventureDetails(document, adventure.details);
+      if (detailRows) main.append(WebImporter.DOMUtils.createTable(detailRows, document));
+      const shareH = document.createElement('h5');
+      shareH.textContent = 'Share this Adventure';
+      main.append(shareH);
+      main.append(document.createElement('hr'));
+
+      // 4) tabs (Overview / Itinerary / What to Bring)
+      const tabRows = buildAdventureTabs(document, adventure.tabs, base, title);
+      if (tabRows) main.append(WebImporter.DOMUtils.createTable(tabRows, document));
+
+      // metadata is appended below; keep the already-built appended[] empty here.
+      appended.length = 0;
     }
 
     // Metadata block (also used to feed the query index)

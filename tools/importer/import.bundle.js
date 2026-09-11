@@ -532,14 +532,95 @@ var CustomImportScript = (() => {
     }
     return [["Author Bio"], [imgCell, body]];
   }
+  function extractAdventure(document, base) {
+    const dl = document.querySelector("dl.cmp-contentfragment__elements, dl");
+    if (!dl) return null;
+    const heroImgs = [...document.querySelectorAll(".cmp-carousel__item img")].map((img) => absSrc(img, base));
+    const details = [...dl.querySelectorAll(".cmp-contentfragment__element, div")].map((el) => {
+      const dt = el.querySelector("dt");
+      const dd = el.querySelector("dd");
+      if (!dt || !dd) return null;
+      return { label: dt.textContent.trim(), value: dd.textContent.trim() };
+    }).filter(Boolean);
+    const tablist = [...document.querySelectorAll('[role="tablist"]')].find((t) => [...t.querySelectorAll('[role="tab"]')].some((x) => /overview/i.test(x.textContent)));
+    const tabs = [];
+    if (tablist) {
+      [...tablist.querySelectorAll('[role="tab"]')].forEach((tab) => {
+        const panel = document.getElementById(tab.getAttribute("aria-controls"));
+        if (panel) tabs.push({ label: tab.textContent.trim(), panel: panel.cloneNode(true) });
+      });
+    }
+    return { heroImgs, details, tabs };
+  }
+  function buildAdventureCarousel(document, imgs) {
+    if (!imgs.length) return null;
+    const rows = [["Carousel"]];
+    imgs.forEach((src) => {
+      const cell = document.createElement("div");
+      const im = document.createElement("img");
+      im.src = src;
+      cell.append(im);
+      rows.push([cell]);
+    });
+    return rows;
+  }
+  function buildAdventureDetails(document, details) {
+    if (!details.length) return null;
+    const rows = [["Adventure Details"]];
+    details.forEach(({ label, value }) => {
+      const labelCell = document.createElement("div");
+      const lp = document.createElement("p");
+      lp.textContent = label;
+      labelCell.append(lp);
+      const valueCell = document.createElement("div");
+      const vp = document.createElement("p");
+      const strong = document.createElement("strong");
+      strong.textContent = value;
+      vp.append(strong);
+      valueCell.append(vp);
+      rows.push([labelCell, valueCell]);
+    });
+    return rows;
+  }
+  function buildAdventureTabs(document, tabs, base, title) {
+    if (!tabs.length) return null;
+    const rows = [["Tabs"]];
+    tabs.forEach(({ label, panel }) => {
+      const content = document.createElement("div");
+      const source = panel.querySelector(".cmp-contentfragment__content, article") || panel;
+      [...source.children].forEach((child) => content.append(child.cloneNode(true)));
+      content.querySelectorAll("img").forEach((img) => {
+        const src = img.getAttribute("src");
+        if (src && !/^https?:/i.test(src) && !src.startsWith("data:")) {
+          try {
+            img.src = new URL(src, base).href;
+          } catch (e) {
+          }
+        }
+      });
+      content.querySelectorAll("h1, h2, h3").forEach((h) => {
+        if (title && h.textContent.trim().toLowerCase() === title.toLowerCase()) h.remove();
+      });
+      content.querySelectorAll("p").forEach((p) => {
+        if (!p.textContent.trim() && !p.querySelector("img, picture")) p.remove();
+      });
+      const labelCell = document.createElement("div");
+      labelCell.textContent = label;
+      rows.push([labelCell, content]);
+    });
+    return rows;
+  }
   var import_default = {
     transformDOM: ({ document, url }) => {
+      var _a;
       const main = pickMain(document);
       const path = new URL(url).pathname;
       const isAbout = path.endsWith("/about-us") || path.endsWith("/about-us.html");
       const profiles = isAbout ? extractProfileCards(document, new URL(url)) : null;
       const isArticle = path.includes("/magazine/") && !path.endsWith("/magazine") && !path.endsWith("/magazine.html");
       const byline = isArticle ? extractArticleByline(document, new URL(url)) : null;
+      const isAdventure = path.includes("/adventures/") && !path.endsWith("/adventures") && !path.endsWith("/adventures.html");
+      const adventure = isAdventure ? extractAdventure(document, new URL(url)) : null;
       stripChrome(main, WebImporter);
       absolutizeImages(main, url);
       fixLinks(main);
@@ -557,8 +638,8 @@ var CustomImportScript = (() => {
         const carouselRows = buildHomeCarousel(document, url);
         const featuredTeasers = [...main.querySelectorAll(".cmp-teaser")].filter((t) => !t.closest(".cmp-carousel") && t.querySelector("img"));
         featuredTeasers.forEach((teaser) => {
-          var _a, _b;
-          const hasPretitle = !!((_b = (_a = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim());
+          var _a2, _b;
+          const hasPretitle = !!((_b = (_a2 = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim());
           const table = hasPretitle ? buildFeaturedColumns(document, teaser, base, WebImporter) : buildFeatureHero(document, teaser, base, WebImporter);
           if (table) teaser.replaceWith(table);
         });
@@ -599,9 +680,9 @@ var CustomImportScript = (() => {
       if (path.endsWith("/magazine") || path.endsWith("/magazine.html")) {
         const base = new URL(url);
         [...main.querySelectorAll(".cmp-teaser")].forEach((teaser) => {
-          var _a, _b;
+          var _a2, _b;
           if (!teaser.querySelector("img")) return;
-          const hasPretitle = !!((_b = (_a = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim());
+          const hasPretitle = !!((_b = (_a2 = teaser.querySelector(".cmp-teaser__pretitle")) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim());
           if (hasPretitle) {
             const table2 = buildFeaturedColumns(document, teaser, base, WebImporter);
             if (table2) teaser.replaceWith(table2);
@@ -680,6 +761,36 @@ var CustomImportScript = (() => {
           ["template", "article"]
         ];
         appended.push(WebImporter.DOMUtils.createTable(listRows, document));
+      }
+      if (isAdventure && adventure) {
+        const base = new URL(url);
+        const title = (((_a = main.querySelector("h1")) == null ? void 0 : _a.textContent) || "").trim();
+        main.textContent = "";
+        const carRows = buildAdventureCarousel(document, adventure.heroImgs);
+        if (carRows) main.append(WebImporter.DOMUtils.createTable(carRows, document));
+        main.append(document.createElement("hr"));
+        const slug = mainstreamPath(path).split("/").pop() || "";
+        const pageName = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const eyebrow = document.createElement("p");
+        const advLink = document.createElement("a");
+        advLink.href = "/adventures";
+        advLink.textContent = "Adventures";
+        eyebrow.append(advLink);
+        eyebrow.append(document.createTextNode(` / ${pageName}`));
+        main.append(eyebrow);
+        const h1new = document.createElement("h1");
+        h1new.textContent = title || pageName;
+        main.append(h1new);
+        main.append(document.createElement("hr"));
+        const detailRows = buildAdventureDetails(document, adventure.details);
+        if (detailRows) main.append(WebImporter.DOMUtils.createTable(detailRows, document));
+        const shareH = document.createElement("h5");
+        shareH.textContent = "Share this Adventure";
+        main.append(shareH);
+        main.append(document.createElement("hr"));
+        const tabRows = buildAdventureTabs(document, adventure.tabs, base, title);
+        if (tabRows) main.append(WebImporter.DOMUtils.createTable(tabRows, document));
+        appended.length = 0;
       }
       const metaBlock = buildMetadata(document, url, main, WebImporter);
       if (metaBlock) appended.push(metaBlock);
