@@ -305,14 +305,34 @@ header nav .nav-tools {
   grid-area: tools;
 }
 
-header nav .nav-tools p {
+header nav .nav-tools form.nav-search {
   margin: 0;
-  width: 166px;
+}
+
+header nav .nav-tools input[type='search'] {
+  box-sizing: border-box;
+  margin: 0;
+  width: 200px;
   padding: 11px 14px 11px 36px;
   border: 0;
-  color: var(--muted-color);
+  border-radius: 0;
+  color: var(--text-color);
+  font-family: var(--body-font-family);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   background: rgb(235 235 235 / 54%) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23202020" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 12px center;
+  appearance: none;
+}
+
+header nav .nav-tools input[type='search']::placeholder {
+  color: var(--muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 1;
+}
+
+header nav .nav-tools input[type='search']:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
 }

@@ -159,6 +159,27 @@ export default async function decorate(block) {
     });
   }
 
+  // tools → functional search form (navigates to /search?q=…)
+  const navTools = nav.querySelector('.nav-tools');
+  if (navTools) {
+    const placeholder = (navTools.textContent || 'Search').trim() || 'Search';
+    navTools.textContent = '';
+    const form = document.createElement('form');
+    form.className = 'nav-search';
+    form.action = '/search';
+    form.role = 'search';
+    const input = document.createElement('input');
+    input.type = 'search';
+    input.name = 'q';
+    input.placeholder = placeholder;
+    input.setAttribute('aria-label', placeholder);
+    // preserve the current query when already on the search page
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('q')) input.value = params.get('q');
+    form.append(input);
+    navTools.append(form);
+  }
+
   // hamburger for mobile
   const hamburger = document.createElement('div');
   hamburger.classList.add('nav-hamburger');
