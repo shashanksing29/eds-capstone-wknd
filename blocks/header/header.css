@@ -200,6 +200,17 @@ header nav .nav-sections a:hover {
   color: var(--brand-primary);
 }
 
+/* active page — yellow highlight chip (WKND) */
+header nav .nav-sections a[aria-current='page'] {
+  background-color: var(--brand-primary);
+  color: var(--text-color);
+  padding: 10px 14px;
+}
+
+header nav .nav-sections a[aria-current='page']:hover {
+  color: var(--text-color);
+}
+
 header nav .nav-sections ul > li > ul {
   margin-top: 0;
 }

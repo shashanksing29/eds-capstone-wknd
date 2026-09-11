@@ -6,7 +6,6 @@
  */
 
 const NAV_LINKS = [
-  ['Home', '/'],
   ['Magazine', '/magazine'],
   ['Adventures', '/adventures'],
   ['FAQs', '/faqs'],

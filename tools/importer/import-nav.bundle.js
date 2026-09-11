@@ -24,7 +24,6 @@ var CustomImportScript = (() => {
     default: () => import_nav_default
   });
   var NAV_LINKS = [
-    ["Home", "/"],
     ["Magazine", "/magazine"],
     ["Adventures", "/adventures"],
     ["FAQs", "/faqs"],
