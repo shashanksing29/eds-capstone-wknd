@@ -925,6 +925,18 @@ export default {
     if (isArticle) {
       const h1el = main.querySelector('h1');
 
+      // The "By {author}" byline is authored as an <h4>, which breaks heading
+      // order (h1 → h4). Convert it to a plain paragraph (styled via
+      // body.article … .byline) so headings stay sequential.
+      const bylineH = [...main.querySelectorAll('h2, h3, h4, h5, h6')]
+        .find((h) => /^By\s+.+/i.test(h.textContent.trim()) && h.textContent.trim().length < 60);
+      if (bylineH) {
+        const p = document.createElement('p');
+        p.className = 'byline';
+        p.textContent = bylineH.textContent.trim();
+        bylineH.replaceWith(p);
+      }
+
       // Breadcrumb eyebrow above the title: "Magazine / {Page Name}".
       if (h1el) {
         const slug = mainstreamPath(path).split('/').pop() || '';
