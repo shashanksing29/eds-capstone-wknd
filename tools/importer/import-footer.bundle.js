@@ -24,7 +24,6 @@ var CustomImportScript = (() => {
     default: () => import_footer_default
   });
   var NAV_LINKS = [
-    ["Home", "/"],
     ["Magazine", "/magazine"],
     ["Adventures", "/adventures"],
     ["FAQs", "/faqs"],
@@ -66,9 +65,33 @@ var CustomImportScript = (() => {
       });
       container.append(socialUl);
       container.append(document.createElement("hr"));
-      const p = document.createElement("p");
-      p.textContent = "\u24B8 2024, WKND Site. WKND is a fictitious adventure and travel website created by Adobe to demonstrate how anyone can use Adobe Experience Manager to build a beautiful, feature-rich website.";
-      container.append(p);
+      const copyright = document.createElement("p");
+      copyright.textContent = "\u24B8 2019, WKND Site.";
+      container.append(copyright);
+      const mkLink = (text, href) => {
+        const a = document.createElement("a");
+        a.href = href;
+        a.textContent = text;
+        return a;
+      };
+      const blurb = document.createElement("p");
+      blurb.append(document.createTextNode(
+        "WKND is a fictitious adventure and travel website created by Adobe to demonstrate how anyone can use Adobe Experience Manager to build a beautiful, feature-rich website over a single weekend. This site is built entirely with Adobe Experience Manager "
+      ));
+      blurb.append(mkLink("Core Components", "https://docs.adobe.com/content/help/en/experience-manager-core-components/using/introduction.html"));
+      blurb.append(document.createTextNode(" and "));
+      blurb.append(mkLink("Archetype", "https://github.com/adobe/aem-project-archetype"));
+      blurb.append(document.createTextNode(" that are available as open source code to the public. The entire "));
+      blurb.append(mkLink("site source code", "https://github.com/adobe/aem-guides-wknd/"));
+      blurb.append(document.createTextNode(" is available as open source as well and is accompanied with a "));
+      blurb.append(mkLink("detailed tutorial", "https://docs.adobe.com/content/help/en/experience-manager-learn/getting-started-wknd-tutorial-develop/overview.html"));
+      blurb.append(document.createTextNode(" on how to recreate the site."));
+      container.append(blurb);
+      const stock = document.createElement("p");
+      stock.append(document.createTextNode("Many of the beautiful images in the WKND site are available for purchase via "));
+      stock.append(mkLink("Adobe Stock", "https://stock.adobe.com/"));
+      stock.append(document.createTextNode("."));
+      container.append(stock);
       return container;
     },
     generateDocumentPath: () => "/footer"
