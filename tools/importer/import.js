@@ -29,6 +29,30 @@ function mainstreamPath(pathname) {
   return p === '' ? '/' : p;
 }
 
+/**
+ * Adventure → activity facet, mapped by slug from the WKND "Current Adventures"
+ * filter tabs. Feeds the query-index `activity` column so the /adventures
+ * listing filter tabs are index-driven (a new adventure appears automatically
+ * once it carries this metadata).
+ */
+const ADVENTURE_ACTIVITY = {
+  'climbing-new-zealand': 'Climbing',
+  'colorado-rock-climbing': 'Climbing',
+  'whistler-mountain-biking': 'Cycling',
+  'cycling-tuscany': 'Cycling',
+  'west-coast-cycling': 'Cycling',
+  'downhill-skiing-wyoming': 'Skiing',
+  'ski-touring-mont-blanc': 'Skiing',
+  'tahoe-skiing': 'Skiing',
+  'bali-surf-camp': 'Surfing',
+  'surf-camp-costa-rica': 'Surfing',
+  'beervana-portland': 'Travel',
+  'gastronomic-marais-tour': 'Travel',
+  'napa-wine-tasting': 'Travel',
+  'riverside-camping-australia': 'Travel',
+  'yosemite-backpacking': 'Travel',
+};
+
 /** Absolutize every in-scope image src against the source origin. */
 function absolutizeImages(main, url) {
   const base = new URL(url);
@@ -139,6 +163,11 @@ function buildMetadata(document, url, main, WebImporter) {
   } else if (path.includes('/adventures/') && !path.endsWith('/adventures')) {
     meta.Template = 'adventure';
     meta.Category = 'Adventures';
+    // Activity facet (Climbing/Cycling/Skiing/Surfing/Travel) — powers the
+    // index-driven filter tabs on the /adventures listing. Mapped by slug from
+    // the WKND "Current Adventures" tab panels.
+    const slug = mainstreamPath(path).split('/').pop();
+    if (ADVENTURE_ACTIVITY[slug]) meta.Activity = ADVENTURE_ACTIVITY[slug];
   } else if (path.endsWith('/adventures') || path.endsWith('/adventures.html')) {
     meta.Template = 'adventure-listing';
   } else if (path.endsWith('/magazine') || path.endsWith('/magazine.html')) {
@@ -153,93 +182,6 @@ function buildMetadata(document, url, main, WebImporter) {
 
   const block = WebImporter.Blocks.getMetadataBlock(document, meta);
   return block;
-}
-
-/**
- * Map each adventure to its filter categories, derived from the WKND
- * "Current Adventures" tab panels. Keyed by adventure slug.
- */
-function adventureCategoryMap(document) {
-  const map = {};
-  const tabs = [...document.querySelectorAll('[role="tab"]')].map((t) => t.textContent.trim());
-  const panels = [...document.querySelectorAll('[role="tabpanel"]')];
-  panels.forEach((panel, i) => {
-    const cat = tabs[i];
-    if (!cat || /^all$/i.test(cat)) return;
-    panel.querySelectorAll('a[href*="/adventures/"]').forEach((a) => {
-      const slug = (a.getAttribute('href') || '').match(/adventures\/([a-z0-9-]+)/)?.[1];
-      if (!slug) return;
-      (map[slug] = map[slug] || new Set()).add(cat);
-    });
-  });
-  return map;
-}
-
-/**
- * Build a Cards block from adventure teaser links (listing page). Each card
- * carries an image, title link, description, and a categories marker
- * (`categories: Surfing`) that cards.js reads to power the filter tabs.
- */
-function buildAdventureCards(document, main, url) {
-  const base = new URL(url);
-  const catMap = adventureCategoryMap(document);
-  const seen = new Set();
-  const cards = [];
-  main.querySelectorAll('article').forEach((art) => {
-    const a = art.querySelector('a[href*="/adventures/"]');
-    if (!a) return;
-    const href = a.getAttribute('href') || '';
-    if (!/\/adventures\/[a-z0-9-]+(\.html)?$/i.test(href)) return;
-    const slug = href.match(/adventures\/([a-z0-9-]+)/)?.[1] || '';
-    const key = mainstreamPath(href.startsWith('http') ? new URL(href).pathname : href);
-    if (seen.has(key)) return;
-    const img = art.querySelector('img');
-    const label = [...art.querySelectorAll('a')].map((x) => x.textContent.trim()).find(Boolean)
-      || key.split('/').pop().replace(/-/g, ' ');
-    // description = longest text not inside a link
-    let desc = '';
-    art.querySelectorAll('p, div, span').forEach((n) => {
-      const t = n.textContent.trim();
-      if (t && !n.querySelector('a, img') && t !== label && t.length > desc.length) desc = t;
-    });
-    if (!img && !label) return;
-    seen.add(key);
-    cards.push({
-      href: key, img, label, desc, cats: [...(catMap[slug] || [])],
-    });
-  });
-  if (cards.length === 0) return null;
-
-  const rows = [['Cards']];
-  cards.forEach(({
-    href, img, label, desc, cats,
-  }) => {
-    const cell = document.createElement('div');
-    if (img) {
-      const im = document.createElement('img');
-      im.src = /^https?:/.test(img.src) ? img.src : new URL(img.getAttribute('src'), base).href;
-      im.alt = label;
-      cell.append(im);
-    }
-    const p = document.createElement('p');
-    const link = document.createElement('a');
-    link.href = href;
-    link.textContent = label;
-    p.append(link);
-    cell.append(p);
-    if (desc) {
-      const dp = document.createElement('p');
-      dp.textContent = desc;
-      cell.append(dp);
-    }
-    if (cats.length) {
-      const cp = document.createElement('p');
-      cp.textContent = `categories: ${cats.join(', ')}`;
-      cell.append(cp);
-    }
-    rows.push([cell]);
-  });
-  return rows;
 }
 
 /** Absolutize a possibly-relative image src against the source origin. */
@@ -291,53 +233,6 @@ function buildHomeCarousel(document, url) {
       content.append(p);
     }
     rows.push([imgCell, content]);
-  });
-  return rows.length > 1 ? rows : null;
-}
-
-/**
- * Convert an article/teaser list (Recent Articles, "Where do you want to go?")
- * into Cards block rows: each card is [image + title link + description].
- */
-function buildCardsFromArticles(document, listEl, base) {
-  const items = [...listEl.querySelectorAll('article, li')].filter((el, i, arr) => (
-    // keep leaf items: articles, or li that has a link+image
-    el.tagName === 'ARTICLE' || (!arr.some((o) => o !== el && o.contains(el) && o.tagName === 'ARTICLE'))
-  ));
-  const seen = new Set();
-  const rows = [['Cards']];
-  (listEl.querySelectorAll('article').length ? listEl.querySelectorAll('article') : items).forEach((art) => {
-    const link = art.querySelector('a[href]');
-    const img = art.querySelector('img');
-    if (!link || !img) return;
-    const href = mainstreamPath(link.getAttribute('href') || '');
-    if (seen.has(href)) return;
-    seen.add(href);
-    const title = [...art.querySelectorAll('a')].map((a) => a.textContent.trim()).find(Boolean) || '';
-    // description = text nodes not inside a link
-    let desc = '';
-    art.querySelectorAll('p, div, span').forEach((n) => {
-      const t = n.textContent.trim();
-      if (t && !n.querySelector('a, img') && t !== title && t.length > desc.length) desc = t;
-    });
-
-    const cell = document.createElement('div');
-    const im = document.createElement('img');
-    im.src = absSrc(img, base);
-    im.alt = title;
-    cell.append(im);
-    const tp = document.createElement('p');
-    const ta = document.createElement('a');
-    ta.href = href;
-    ta.textContent = title;
-    tp.append(ta);
-    cell.append(tp);
-    if (desc) {
-      const dp = document.createElement('p');
-      dp.textContent = desc;
-      cell.append(dp);
-    }
-    rows.push([cell]);
   });
   return rows.length > 1 ? rows : null;
 }
@@ -794,14 +689,18 @@ export default {
         if (table) teaser.replaceWith(table);
       });
 
-      // Convert each source article list into a Cards table, in place.
+      // Replace each source article list with a dynamic Article List block so
+      // newly published content reaches the home page with no document edit.
+      // "Recent Articles" links to /magazine/*, "Where do you want to go?" to
+      // /adventures/* — detect by link target and swap in the matching block.
       const articleLists = [...main.querySelectorAll('ul')].filter((ul) => ul.querySelector('article'));
       articleLists.forEach((ul) => {
-        const cardRows = buildCardsFromArticles(document, ul, base);
-        if (cardRows) {
-          const table = WebImporter.DOMUtils.createTable(cardRows, document);
-          ul.replaceWith(table);
-        }
+        const isAdv = !!ul.querySelector('a[href*="/adventures/"]');
+        const rows = isAdv
+          ? [['Article List'], ['category', 'Adventures'], ['template', 'adventure'], ['limit', '4']]
+          : [['Article List'], ['category', 'Magazine'], ['template', 'article'], ['limit', '4']];
+        const table = WebImporter.DOMUtils.createTable(rows, document);
+        ul.replaceWith(table);
       });
 
       // Remove the source carousel; prepend our Carousel block.
@@ -819,7 +718,6 @@ export default {
     // filter tabs (OL) and every source article list (UL) so nothing repeats.
     if (path.endsWith('/adventures') || path.endsWith('/adventures.html')) {
       const base = new URL(url);
-      const rows = buildAdventureCards(document, main, url);
 
       // Intro teaser ("Experience the world with us") → full-width Hero with an
       // overlapping caption card, matching WKND.
@@ -830,17 +728,24 @@ export default {
         if (heroTable) intro.replaceWith(heroTable); else intro.remove();
       }
 
-      // remove the category filter tab list and all source article lists
+      // remove the category filter tab list and all source article lists —
+      // the listing is rendered dynamically from the query-index instead.
       main.querySelectorAll('ol').forEach((ol) => {
         if (/climbing|cycling|skiing|surfing|travel/i.test(ol.textContent)) ol.remove();
       });
       main.querySelectorAll('ul').forEach((ul) => {
         if (ul.querySelector('a[href*="/adventures/"], article')) ul.remove();
       });
-      if (rows) {
-        const table = WebImporter.DOMUtils.createTable(rows, document);
-        appended.push(table);
-      }
+
+      // Dynamic Article List (Adventures) with index-driven activity filter
+      // tabs. A newly published adventure appears here automatically.
+      const advRows = [
+        ['Article List'],
+        ['category', 'Adventures'],
+        ['template', 'adventure'],
+        ['filter', 'activity'],
+      ];
+      appended.push(WebImporter.DOMUtils.createTable(advRows, document));
     }
 
     // Magazine listing: Featured Article (2-col) + dynamic Article List block.
