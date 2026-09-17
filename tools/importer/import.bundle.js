@@ -35,6 +35,7 @@ var CustomImportScript = (() => {
     "colorado-rock-climbing": "Climbing",
     "whistler-mountain-biking": "Cycling",
     "cycling-tuscany": "Cycling",
+    "cycling-southern-utah": "Cycling",
     "west-coast-cycling": "Cycling",
     "downhill-skiing-wyoming": "Skiing",
     "ski-touring-mont-blanc": "Skiing",
