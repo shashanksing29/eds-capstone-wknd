@@ -30,6 +30,23 @@ var CustomImportScript = (() => {
     if (p !== "/" && p.endsWith("/")) p = p.slice(0, -1);
     return p === "" ? "/" : p;
   }
+  var ADVENTURE_ACTIVITY = {
+    "climbing-new-zealand": "Climbing",
+    "colorado-rock-climbing": "Climbing",
+    "whistler-mountain-biking": "Cycling",
+    "cycling-tuscany": "Cycling",
+    "west-coast-cycling": "Cycling",
+    "downhill-skiing-wyoming": "Skiing",
+    "ski-touring-mont-blanc": "Skiing",
+    "tahoe-skiing": "Skiing",
+    "bali-surf-camp": "Surfing",
+    "surf-camp-costa-rica": "Surfing",
+    "beervana-portland": "Travel",
+    "gastronomic-marais-tour": "Travel",
+    "napa-wine-tasting": "Travel",
+    "riverside-camping-australia": "Travel",
+    "yosemite-backpacking": "Travel"
+  };
   function absolutizeImages(main, url) {
     const base = new URL(url);
     main.querySelectorAll("img").forEach((img) => {
@@ -113,6 +130,8 @@ var CustomImportScript = (() => {
     } else if (path.includes("/adventures/") && !path.endsWith("/adventures")) {
       meta.Template = "adventure";
       meta.Category = "Adventures";
+      const slug = mainstreamPath(path).split("/").pop();
+      if (ADVENTURE_ACTIVITY[slug]) meta.Activity = ADVENTURE_ACTIVITY[slug];
     } else if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
       meta.Template = "adventure-listing";
     } else if (path.endsWith("/magazine") || path.endsWith("/magazine.html")) {
@@ -126,89 +145,6 @@ var CustomImportScript = (() => {
     }
     const block = WebImporter2.Blocks.getMetadataBlock(document, meta);
     return block;
-  }
-  function adventureCategoryMap(document) {
-    const map = {};
-    const tabs = [...document.querySelectorAll('[role="tab"]')].map((t) => t.textContent.trim());
-    const panels = [...document.querySelectorAll('[role="tabpanel"]')];
-    panels.forEach((panel, i) => {
-      const cat = tabs[i];
-      if (!cat || /^all$/i.test(cat)) return;
-      panel.querySelectorAll('a[href*="/adventures/"]').forEach((a) => {
-        var _a;
-        const slug = (_a = (a.getAttribute("href") || "").match(/adventures\/([a-z0-9-]+)/)) == null ? void 0 : _a[1];
-        if (!slug) return;
-        (map[slug] = map[slug] || /* @__PURE__ */ new Set()).add(cat);
-      });
-    });
-    return map;
-  }
-  function buildAdventureCards(document, main, url) {
-    const base = new URL(url);
-    const catMap = adventureCategoryMap(document);
-    const seen = /* @__PURE__ */ new Set();
-    const cards = [];
-    main.querySelectorAll("article").forEach((art) => {
-      var _a;
-      const a = art.querySelector('a[href*="/adventures/"]');
-      if (!a) return;
-      const href = a.getAttribute("href") || "";
-      if (!/\/adventures\/[a-z0-9-]+(\.html)?$/i.test(href)) return;
-      const slug = ((_a = href.match(/adventures\/([a-z0-9-]+)/)) == null ? void 0 : _a[1]) || "";
-      const key = mainstreamPath(href.startsWith("http") ? new URL(href).pathname : href);
-      if (seen.has(key)) return;
-      const img = art.querySelector("img");
-      const label = [...art.querySelectorAll("a")].map((x) => x.textContent.trim()).find(Boolean) || key.split("/").pop().replace(/-/g, " ");
-      let desc = "";
-      art.querySelectorAll("p, div, span").forEach((n) => {
-        const t = n.textContent.trim();
-        if (t && !n.querySelector("a, img") && t !== label && t.length > desc.length) desc = t;
-      });
-      if (!img && !label) return;
-      seen.add(key);
-      cards.push({
-        href: key,
-        img,
-        label,
-        desc,
-        cats: [...catMap[slug] || []]
-      });
-    });
-    if (cards.length === 0) return null;
-    const rows = [["Cards"]];
-    cards.forEach(({
-      href,
-      img,
-      label,
-      desc,
-      cats
-    }) => {
-      const cell = document.createElement("div");
-      if (img) {
-        const im = document.createElement("img");
-        im.src = /^https?:/.test(img.src) ? img.src : new URL(img.getAttribute("src"), base).href;
-        im.alt = label;
-        cell.append(im);
-      }
-      const p = document.createElement("p");
-      const link = document.createElement("a");
-      link.href = href;
-      link.textContent = label;
-      p.append(link);
-      cell.append(p);
-      if (desc) {
-        const dp = document.createElement("p");
-        dp.textContent = desc;
-        cell.append(dp);
-      }
-      if (cats.length) {
-        const cp = document.createElement("p");
-        cp.textContent = `categories: ${cats.join(", ")}`;
-        cell.append(cp);
-      }
-      rows.push([cell]);
-    });
-    return rows;
   }
   function absSrc(imgEl, base) {
     const src = imgEl.getAttribute("src") || "";
@@ -250,46 +186,6 @@ var CustomImportScript = (() => {
         content.append(p);
       }
       rows.push([imgCell, content]);
-    });
-    return rows.length > 1 ? rows : null;
-  }
-  function buildCardsFromArticles(document, listEl, base) {
-    const items = [...listEl.querySelectorAll("article, li")].filter((el, i, arr) => (
-      // keep leaf items: articles, or li that has a link+image
-      el.tagName === "ARTICLE" || !arr.some((o) => o !== el && o.contains(el) && o.tagName === "ARTICLE")
-    ));
-    const seen = /* @__PURE__ */ new Set();
-    const rows = [["Cards"]];
-    (listEl.querySelectorAll("article").length ? listEl.querySelectorAll("article") : items).forEach((art) => {
-      const link = art.querySelector("a[href]");
-      const img = art.querySelector("img");
-      if (!link || !img) return;
-      const href = mainstreamPath(link.getAttribute("href") || "");
-      if (seen.has(href)) return;
-      seen.add(href);
-      const title = [...art.querySelectorAll("a")].map((a) => a.textContent.trim()).find(Boolean) || "";
-      let desc = "";
-      art.querySelectorAll("p, div, span").forEach((n) => {
-        const t = n.textContent.trim();
-        if (t && !n.querySelector("a, img") && t !== title && t.length > desc.length) desc = t;
-      });
-      const cell = document.createElement("div");
-      const im = document.createElement("img");
-      im.src = absSrc(img, base);
-      im.alt = title;
-      cell.append(im);
-      const tp = document.createElement("p");
-      const ta = document.createElement("a");
-      ta.href = href;
-      ta.textContent = title;
-      tp.append(ta);
-      cell.append(tp);
-      if (desc) {
-        const dp = document.createElement("p");
-        dp.textContent = desc;
-        cell.append(dp);
-      }
-      rows.push([cell]);
     });
     return rows.length > 1 ? rows : null;
   }
@@ -645,11 +541,10 @@ var CustomImportScript = (() => {
         });
         const articleLists = [...main.querySelectorAll("ul")].filter((ul) => ul.querySelector("article"));
         articleLists.forEach((ul) => {
-          const cardRows = buildCardsFromArticles(document, ul, base);
-          if (cardRows) {
-            const table = WebImporter.DOMUtils.createTable(cardRows, document);
-            ul.replaceWith(table);
-          }
+          const isAdv = !!ul.querySelector('a[href*="/adventures/"]');
+          const rows = isAdv ? [["Article List"], ["category", "Adventures"], ["template", "adventure"], ["limit", "4"]] : [["Article List"], ["category", "Magazine"], ["template", "article"], ["limit", "4"]];
+          const table = WebImporter.DOMUtils.createTable(rows, document);
+          ul.replaceWith(table);
         });
         WebImporter.DOMUtils.remove(main, [".cmp-carousel", ".carousel"]);
         if (carouselRows) {
@@ -659,7 +554,6 @@ var CustomImportScript = (() => {
       }
       if (path.endsWith("/adventures") || path.endsWith("/adventures.html")) {
         const base = new URL(url);
-        const rows = buildAdventureCards(document, main, url);
         const intro = [...main.querySelectorAll(".cmp-teaser")].find((t) => t.querySelector("img") && !t.closest('[role="tabpanel"]'));
         if (intro) {
           const heroTable = buildFeatureHero(document, intro, base, WebImporter);
@@ -672,10 +566,13 @@ var CustomImportScript = (() => {
         main.querySelectorAll("ul").forEach((ul) => {
           if (ul.querySelector('a[href*="/adventures/"], article')) ul.remove();
         });
-        if (rows) {
-          const table = WebImporter.DOMUtils.createTable(rows, document);
-          appended.push(table);
-        }
+        const advRows = [
+          ["Article List"],
+          ["category", "Adventures"],
+          ["template", "adventure"],
+          ["filter", "activity"]
+        ];
+        appended.push(WebImporter.DOMUtils.createTable(advRows, document));
       }
       if (path.endsWith("/magazine") || path.endsWith("/magazine.html")) {
         const base = new URL(url);

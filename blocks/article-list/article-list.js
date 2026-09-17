@@ -22,6 +22,7 @@ const DEFAULTS = {
   limit: 0,
   path: '',
   exclude: '',
+  filter: '', // index column to build filter tabs from (e.g. "activity")
 };
 
 /** Read the block's key/value config rows into an options object. */
@@ -159,6 +160,41 @@ function buildCard(article) {
   return li;
 }
 
+/**
+ * Render a filter-tab bar (All + each distinct facet value) that toggles card
+ * visibility by the given index column. Matches the WKND "Current Adventures"
+ * filter — but driven entirely by the index, so a new value appears
+ * automatically. Facet values are read from each card's data-facet attribute.
+ */
+function renderFilterTabs(block, ul, facetValues) {
+  const tabs = document.createElement('div');
+  tabs.className = 'article-list-filters';
+  tabs.setAttribute('role', 'tablist');
+
+  const apply = (value) => {
+    ul.querySelectorAll(':scope > li').forEach((li) => {
+      const facets = (li.dataset.facet || '').split('|');
+      li.style.display = value === 'All' || facets.includes(value) ? '' : 'none';
+    });
+    tabs.querySelectorAll('button').forEach((b) => {
+      b.setAttribute('aria-selected', b.textContent === value ? 'true' : 'false');
+    });
+  };
+
+  ['All', ...facetValues].forEach((value) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'article-list-filter';
+    btn.textContent = value;
+    btn.setAttribute('role', 'tab');
+    btn.addEventListener('click', () => apply(value));
+    tabs.append(btn);
+  });
+
+  block.prepend(tabs);
+  apply('All');
+}
+
 export default async function decorate(block) {
   const cfg = readConfig(block);
   const compact = block.classList.contains('compact');
@@ -174,8 +210,12 @@ export default async function decorate(block) {
       .filter((row) => matches(row, cfg))
       .all();
 
-    // Sort newest-first when a date column is present.
-    articles.sort((a, b) => (parseInt(b.date, 10) || 0) - (parseInt(a.date, 10) || 0));
+    // Sort newest-first when a date column is present, else A→Z by title.
+    if (articles.some((a) => a.date)) {
+      articles.sort((a, b) => (parseInt(b.date, 10) || 0) - (parseInt(a.date, 10) || 0));
+    } else {
+      articles.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    }
 
     if (cfg.limit > 0) articles = articles.slice(0, cfg.limit);
 
@@ -187,10 +227,22 @@ export default async function decorate(block) {
       return;
     }
 
-    articles.forEach((article) => ul.append(
-      compact ? buildCompactCard(article) : buildCard(article),
-    ));
+    const facetSet = new Set();
+    articles.forEach((article) => {
+      const li = compact ? buildCompactCard(article) : buildCard(article);
+      // tag the card with its facet value(s) for the filter tabs
+      if (cfg.filter && article[cfg.filter]) {
+        const values = String(article[cfg.filter]).split(',').map((v) => v.trim()).filter(Boolean);
+        li.dataset.facet = values.join('|');
+        values.forEach((v) => facetSet.add(v));
+      }
+      ul.append(li);
+    });
     block.append(ul);
+
+    if (cfg.filter && facetSet.size > 0) {
+      renderFilterTabs(block, ul, [...facetSet].sort());
+    }
   } catch (e) {
     // Index may not exist yet (e.g. before first publish). Fail quietly.
     // eslint-disable-next-line no-console
