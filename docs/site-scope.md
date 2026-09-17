@@ -56,10 +56,24 @@ Blocks live in `blocks/`. Variants are a second class on the block (e.g.
 
 Articles and adventures are indexed into `/query-index.json` (config in
 `admin.hlx.page` `query.yaml`) with columns: `path, title, description, image,
-category, template, author, date, lastModified`. The `article-list` and
-`search` blocks fetch this index at runtime (via `scripts/ffetch.js`) so
-listings and search results update automatically as pages are published — no
-page edits required.
+category, template, author, activity, date, lastModified`. The `article-list`
+and `search` blocks fetch this index at runtime (via `scripts/ffetch.js`).
+
+**Every list surface is index-driven** — publishing a new page reaches all of
+them with no document edit:
+
+| Surface | Block | Query |
+| --- | --- | --- |
+| Home → Recent Articles | `article-list` | category=Magazine, limit 4 |
+| Home → Where do you want to go? | `article-list` | category=Adventures, limit 4 |
+| `/magazine` → All Articles | `article-list` | category=Magazine |
+| `/adventures` → Current Adventures | `article-list` | category=Adventures, `filter=activity` (index-driven tabs: Climbing/Cycling/Skiing/Surfing/Travel) |
+| Article sidebar → Share this Story | `article-list compact` | category=Magazine, excludes current |
+| `/search` | `search` | full-text over title/description/category/author |
+
+The only authored (curated) links on the home/magazine pages are the editorial
+highlight spots — the hero carousel, the Featured Article, and the Next
+Adventures hero — which are hand-picked on wknd.site as well.
 
 ## Migration pipeline
 
